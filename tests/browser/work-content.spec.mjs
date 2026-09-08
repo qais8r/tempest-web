@@ -26,14 +26,28 @@ test('audio comes before writing when a work includes both', async ({ page }) =>
   expect(contentOrder).toEqual(['audio', 'writing']);
 });
 
-test('work pages link to at most three other works by each author', async ({ page }) => {
+test('work pages link to every other work by the author', async ({ page }) => {
   await page.goto('works/the-light-we-leave/');
 
   const section = page.locator('.more-by-author');
   await expect(section).toHaveCount(1);
   await expect(section.locator('h2')).toHaveText('More by Riley Chen');
-  await expect(section.locator('li')).toHaveCount(3);
+  await expect(section.locator('li')).toHaveCount(4);
   await expect(section.locator('a[href$="/the-light-we-leave/"]')).toHaveCount(0);
+});
+
+test('long more-by titles truncate to one line', async ({ page }) => {
+  await page.goto('works/the-light-we-leave/');
+
+  const title = page.locator('.more-by-author a span').first();
+  await expect(title).toHaveCSS('white-space', 'nowrap');
+  await expect(title).toHaveCSS('overflow', 'hidden');
+  await expect(title).toHaveCSS('text-overflow', 'ellipsis');
+  const heights = await title.evaluate((element) => ({
+    title: element.getBoundingClientRect().height,
+    line: Number.parseFloat(getComputedStyle(element).lineHeight),
+  }));
+  expect(heights.title).toBeCloseTo(heights.line, 0);
 });
 
 test('coauthored work pages show more work by each contributor', async ({ page }) => {
@@ -42,6 +56,6 @@ test('coauthored work pages show more work by each contributor', async ({ page }
   const sections = page.locator('.more-by-author');
   await expect(sections).toHaveCount(2);
   await expect(sections.locator('h2')).toHaveText(['More by Jordan Kim', 'More by Riley Chen']);
-  await expect(sections.locator('li')).toHaveCount(6);
+  await expect(sections.locator('li')).toHaveCount(7);
   await expect(sections.locator('a[href$="/shared-study/"]')).toHaveCount(0);
 });

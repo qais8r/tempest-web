@@ -21,9 +21,9 @@ const workAuthors = authorsFor(work);
 const moreByAuthors = workAuthors
   .map((author) => ({
     author,
-    works: works
-      .filter((candidate) => candidate.slug !== work.slug && candidate.authors.includes(author.slug))
-      .slice(0, 3),
+    works: works.filter(
+      (candidate) => candidate.slug !== work.slug && candidate.authors.includes(author.slug),
+    ),
   }))
   .filter(({ works }) => works.length > 0);
 ---
