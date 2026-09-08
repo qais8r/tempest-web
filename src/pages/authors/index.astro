@@ -22,7 +22,9 @@ const list = [...authors].sort((a, b) => alphabet.compare(a.name.trim(), b.name.
         list.length ? (
           <ul class="author-directory-grid">
             {list.map((author) => {
-              const contributions = works.filter((work) => work.author === author.slug).length;
+              const contributions = works.filter((work) =>
+                work.authors.includes(author.slug),
+              ).length;
               return (
                 <li>
                   <a

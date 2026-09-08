@@ -1,0 +1,15 @@
+{
+  "title": "Shared study",
+  "status": "draft",
+  "issue": "2026",
+  "authors": ["content/authors/jordan-kim.json", "content/authors/riley-chen.json"],
+  "category": "Poetry",
+  "body": "A *shared* line\n  A **second** voice\n\nTogether.",
+  "bodyFormat": "markdown",
+  "poetryAlignment": "center",
+  "about": "Public test fixture for ordered coauthors and formatted poetry.",
+  "artworks": [],
+  "recordings": [],
+  "pdfPage": null,
+  "order": null
+}

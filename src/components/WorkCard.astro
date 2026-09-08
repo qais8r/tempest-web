@@ -1,11 +1,10 @@
 ---
-import { authorFor, url, imageSrcset, type Work } from '../lib/content';
+import { authorNames, url, imageSrcset, type Work } from '../lib/content';
 import Icon from './Icon.astro';
 interface Props {
   work: Work;
 }
 const { work } = Astro.props;
-const author = authorFor(work);
 const artwork = work.artworks[0];
 ---
 
@@ -27,7 +26,7 @@ const artwork = work.artworks[0];
         by <span
           data-work-transition-work={work.slug}
           data-work-transition-context="card"
-          data-work-transition-part="author">{author.name}</span
+          data-work-transition-part="author">{authorNames(work)}</span
         >
       </p>{work.excerpt && <p class="work-excerpt">{work.excerpt}</p>}
       {

@@ -27,12 +27,14 @@ export interface Issue {
 export interface Work {
   slug: string;
   title: string;
-  author: string;
+  authors: string[];
   issue: string;
   category: string;
   order: number | null;
   excerpt: string;
   body: string;
+  bodyFormat: 'plain' | 'markdown';
+  poetryAlignment: 'left' | 'center';
   pdfPage: number | null;
   about: string;
   artworks: {
@@ -71,8 +73,19 @@ export const issueUrl = (i: Issue | string) =>
   url(`/issues/${typeof i === 'string' ? i : i.year}/`);
 export const readerUrl = (i: Issue | string, page?: number | null) =>
   `${issueUrl(i)}reader/${page ? `?page=${page}` : ''}`;
-export const authorFor = (w: Work) => authors.find((a) => a.slug === w.author)!;
+export const authorsFor = (w: Work) =>
+  w.authors.map((slug) => authors.find((a) => a.slug === slug)!);
+export const authorNames = (w: Work) =>
+  new Intl.ListFormat('en', { style: 'long', type: 'conjunction' }).format(
+    authorsFor(w).map((author) => author.name),
+  );
 export const worksFor = (i: Issue) => works.filter((w) => w.issue === i.year);
+export function poetry(value: string) {
+  return sanitizeHtml(marked.parseInline(value, { async: false }) as string, {
+    allowedTags: ['em', 'strong', 'br'],
+    allowedAttributes: {},
+  });
+}
 export function prose(value: string) {
   return sanitizeHtml(marked.parse(value, { async: false }) as string, {
     allowedTags: ['p', 'br', 'em', 'strong', 'a', 'blockquote', 'ul', 'ol', 'li', 'h2', 'h3', 'hr'],

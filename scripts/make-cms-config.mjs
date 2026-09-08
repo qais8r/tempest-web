@@ -65,7 +65,10 @@ const fieldsWork = [
   f('title', 'Title', 'string', { required: true }),
   status,
   { ...ref('issue', 'Issue', 'issues', 'year', 'year'), required: true },
-  { ...ref('author', 'Author', 'authors', 'path', 'name'), required: true },
+  {
+    ...ref('authors', 'Authors, in credit order', 'authors', 'path', 'name', true),
+    required: true,
+  },
   f('category', 'Category', 'select', {
     required: true,
     options: { values: ['Poetry', 'Prose', 'Photography', 'Visual art', 'Other'] },
@@ -73,6 +76,16 @@ const fieldsWork = [
   f('body', 'The written work', 'text', {
     description:
       'The opening text becomes the preview excerpt automatically. Choose Poetry to preserve line breaks and indentation. For other categories, separate paragraphs with a blank line; Markdown emphasis is supported.',
+  }),
+  f('bodyFormat', 'Poetry emphasis', 'select', {
+    default: 'plain',
+    description:
+      'Plain preserves literal text. Markdown enables *italic* and **bold** while retaining poetry spacing. Prose always supports Markdown.',
+    options: { values: ['plain', 'markdown'] },
+  }),
+  f('poetryAlignment', 'Poetry alignment', 'select', {
+    default: 'left',
+    options: { values: ['left', 'center'] },
   }),
   f('artworks', 'Artwork gallery', 'object', {
     list: true,

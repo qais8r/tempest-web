@@ -133,15 +133,15 @@ content:
           search: year
           multiple: false
         required: true
-      - name: author
-        label: Author
+      - name: authors
+        label: Authors, in credit order
         type: reference
         options:
           collection: authors
           value: "{path}"
           label: "{fields.name}"
           search: name
-          multiple: false
+          multiple: true
         required: true
       - name: category
         label: Category
@@ -160,6 +160,25 @@ content:
         description: The opening text becomes the preview excerpt automatically. Choose
           Poetry to preserve line breaks and indentation. For other categories,
           separate paragraphs with a blank line; Markdown emphasis is supported.
+      - name: bodyFormat
+        label: Poetry emphasis
+        type: select
+        default: plain
+        description: Plain preserves literal text. Markdown enables *italic* and
+          **bold** while retaining poetry spacing. Prose always supports
+          Markdown.
+        options:
+          values:
+            - plain
+            - markdown
+      - name: poetryAlignment
+        label: Poetry alignment
+        type: select
+        default: left
+        options:
+          values:
+            - left
+            - center
       - name: artworks
         label: Artwork gallery
         type: object

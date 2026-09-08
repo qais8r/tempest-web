@@ -37,3 +37,9 @@ Sign in to Pages CMS with GitHub and install its GitHub App for **this repositor
 The maintainer sets repository variables `SOURCE_REPO`, `SOURCE_REF`, `PUBLIC_SITE_REPO`, `SITE_URL`, and `BASE_PATH`. A repository-specific write deploy key is stored as the `PAGES_DEPLOY_KEY` Actions secret. The publishing workflow writes generated files to `gh-pages`; it does not commit to the source branch. No personal GitHub token is stored.
 
 Website code is maintained on the `main` branch of [qais8r/tempest-web](https://github.com/qais8r/tempest-web). The generated website files use its separate `gh-pages` branch. The public website currently lives at [qais8r.github.io/tempest-web](https://qais8r.github.io/tempest-web/). The maintainer pins `SOURCE_REPO` to `qais8r/tempest-web` and `SOURCE_REF` to a verified source commit. Changing hosting later requires a new destination and a deploy key for that repository.
+
+## Shared works and poetry
+
+Select every credited contributor in **Authors, in credit order**. Each author must be ready before a shared work can be published. Older single-author records remain readable; migrate their `author` value to a one-element `authors` array when upgrading the editorial forms. Keep filenames and publication statuses unchanged.
+
+Poetry retains line breaks and indentation. Choose **Markdown** under Poetry emphasis to use `*italic*` and `**bold**`; choose center alignment only when the source poem is centered. Plain remains the default for existing poems.

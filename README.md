@@ -45,16 +45,16 @@ CONTENT_DIR=/absolute/path/to/tempest-content/content npm run dev
 | Record | Fields                                                                                             |
 | ------ | -------------------------------------------------------------------------------------------------- |
 | Issue  | Year, introduction, PDF, cover credit, ordered featured works, PDF contents links                  |
-| Work   | Title, author, issue, category, text, artwork, MP3 recordings, optional PDF page and sort override |
+| Work   | Title, ordered authors, issue, category, text, artwork, MP3 recordings, optional PDF page and sort override |
 | Author | Name, biography, optional portrait                                                                 |
 | About  | About copy and footer statement                                                                    |
 | Site   | School, description, optional homepage issue override, hidden editorial repository                 |
 
-Every issue, work, and author has Draft/Ready status. Test content is an ordinary draft and can be deleted after testing. A ready work requires a ready author and a published issue. The newest published year is the homepage issue unless an override is selected.
+Every issue, work, and author has Draft/Ready status. Test content is an ordinary draft and can be deleted after testing. A ready work requires every credited author to be ready and its issue to be published. The newest published year is the homepage issue unless an override is selected.
 
-Pages CMS creates work and author filenames from the initial title or name, appending a number on collisions. Filenames remain unchanged after edits and supply the permanent URL IDs. References store the saved repository path. The loader accepts legacy IDs as well. Editors never type a slug or filename. Works sort by optional override, otherwise PDF page, then alphabetically by title. Recording titles fall back to Audio recording when blank.
+Pages CMS creates work and author filenames from the initial title or name, appending a number on collisions. Filenames remain unchanged after edits and supply the permanent URL IDs. Work authors are an ordered list of references; each contributor receives a byline link and the work appears on each profile. Legacy single-author records continue to load. References store the saved repository path. The loader accepts legacy IDs as well. Editors never type a slug or filename. Works sort by optional override, otherwise PDF page, then alphabetically by title. Recording titles fall back to Audio recording when blank.
 
-The first PDF page supplies the cover and its proportions. Work excerpts are generated from the opening text, up to 120 characters with `...` for longer text. The first gallery image supplies the thumbnail; works without artwork use the full card width for text. The Poetry category preserves line breaks and indentation; prose and biographies support sanitized Markdown. Missing portraits use initials. Past PDFs can be published without entering individual works.
+The first PDF page supplies the cover and its proportions. Work excerpts are generated from the opening text, up to 120 characters with `...` for longer text. The first gallery image supplies the thumbnail; works without artwork use the full card width for text. The Poetry category preserves line breaks and indentation. Poetry emphasis can opt into sanitized inline Markdown, and poems can be left-aligned or centered. Prose and biographies support sanitized Markdown. Missing portraits use initials. Past PDFs can be published without entering individual works.
 
 ## Hosting
 

@@ -6,7 +6,7 @@ export function getStaticPaths() {
   return authors.map((author) => ({ params: { slug: author.slug }, props: { author } }));
 }
 const { author } = Astro.props;
-const list = works.filter((w) => w.author === author.slug);
+const list = works.filter((w) => w.authors.includes(author.slug));
 ---
 
 <Site title={author.name}

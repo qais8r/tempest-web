@@ -3,11 +3,12 @@ import Site from '../../layouts/Site.astro';
 import Icon from '../../components/Icon.astro';
 import {
   works,
-  authorFor,
+  authorsFor,
   issueUrl,
   readerUrl,
   url,
   prose,
+  poetry,
   initials,
   isPoetry,
   imageSrcset,
@@ -16,7 +17,7 @@ export function getStaticPaths() {
   return works.map((work) => ({ params: { slug: work.slug }, props: { work } }));
 }
 const { work } = Astro.props;
-const author = authorFor(work);
+const workAuthors = authorsFor(work);
 ---
 
 <Site title={work.title} description={work.excerpt}
@@ -30,16 +31,29 @@ const author = authorFor(work);
       >
         {work.title}
       </h1><p class="work-author">
-        by <a
-          href={url(`/authors/${author.slug}/`)}
+        by <span
           data-work-transition-work={work.slug}
           data-work-transition-context="detail"
           data-work-transition-part="author"
-          data-author-transition-context="byline"
-          data-author-transition-parts="name"
-          data-author-transition-author={author.slug}
-          data-author-transition-part="name">{author.name}</a
         >
+          {
+            workAuthors.map((author, index) => (
+              <Fragment>
+                {index > 0 &&
+                  (index === workAuthors.length - 1 ? (index === 1 ? ' and ' : ', and ') : ', ')}
+                <a
+                  href={url(`/authors/${author.slug}/`)}
+                  data-author-transition-context="byline"
+                  data-author-transition-parts="name"
+                  data-author-transition-author={author.slug}
+                  data-author-transition-part="name"
+                >
+                  {author.name}
+                </a>
+              </Fragment>
+            ))
+          }
+        </span>
       </p>
     </header>
     <div class="work-reading-layout">
@@ -85,13 +99,23 @@ const author = authorFor(work);
         {
           work.body &&
             (isPoetry(work.category) ? (
-              <div class="poem">{work.body}</div>
+              work.bodyFormat === 'markdown' ? (
+                <div
+                  class="poem"
+                  style={{ textAlign: work.poetryAlignment }}
+                  set:html={poetry(work.body)}
+                />
+              ) : (
+                <div class="poem" style={{ textAlign: work.poetryAlignment }}>
+                  {work.body}
+                </div>
+              )
             ) : (
               <div class="prose" set:html={prose(work.body)} />
             ))
         }
       </div>
-      <aside class="work-margin" aria-label="About this work and its author">
+      <aside class="work-margin" aria-label="About this work and its contributors">
         {
           work.about && (
             <section class="work-note" aria-labelledby="work-note-title">
@@ -103,48 +127,54 @@ const author = authorFor(work);
           )
         }
         <section class="work-author-note" aria-labelledby="work-author-title">
-          <h2 class="eyebrow" id="work-author-title">About the author</h2>
-          <a
-            class="author-teaser"
-            href={url(`/authors/${author.slug}/`)}
-            data-author-transition-context="teaser"
-            data-author-transition-parts="portrait name"
-          >
-            {
-              author.portrait ? (
-                <img
-                  src={url(author.portraitSources?.[0]?.src || author.portrait)}
-                  srcset={imageSrcset(author.portraitSources)}
-                  sizes="3.5rem"
-                  alt=""
-                  loading="lazy"
-                  data-author-transition-author={author.slug}
-                  data-author-transition-context="teaser"
-                  data-author-transition-part="portrait"
-                />
-              ) : (
-                <span
-                  class="avatar-letter"
-                  aria-hidden="true"
-                  data-author-transition-author={author.slug}
-                  data-author-transition-context="teaser"
-                  data-author-transition-part="portrait"
-                >
-                  {initials(author.name)}
-                </span>
-              )
-            }
-            <div>
-              <h3
-                data-author-transition-author={author.slug}
+          <h2 class="eyebrow" id="work-author-title">
+            {workAuthors.length > 1 ? 'About the authors' : 'About the author'}
+          </h2>
+          {
+            workAuthors.map((author) => (
+              <a
+                class="author-teaser"
+                href={url(`/authors/${author.slug}/`)}
                 data-author-transition-context="teaser"
-                data-author-transition-part="name"
+                data-author-transition-parts="portrait name"
               >
-                {author.name}
-              </h3>
-              <span class="text-link">Meet the author <Icon name="arrow" size={16} /></span>
-            </div>
-          </a>
+                {author.portrait ? (
+                  <img
+                    src={url(author.portraitSources?.[0]?.src || author.portrait)}
+                    srcset={imageSrcset(author.portraitSources)}
+                    sizes="3.5rem"
+                    alt=""
+                    loading="lazy"
+                    data-author-transition-author={author.slug}
+                    data-author-transition-context="teaser"
+                    data-author-transition-part="portrait"
+                  />
+                ) : (
+                  <span
+                    class="avatar-letter"
+                    aria-hidden="true"
+                    data-author-transition-author={author.slug}
+                    data-author-transition-context="teaser"
+                    data-author-transition-part="portrait"
+                  >
+                    {initials(author.name)}
+                  </span>
+                )}
+                <div>
+                  <h3
+                    data-author-transition-author={author.slug}
+                    data-author-transition-context="teaser"
+                    data-author-transition-part="name"
+                  >
+                    {author.name}
+                  </h3>
+                  <span class="text-link">
+                    Meet the author <Icon name="arrow" size={16} />
+                  </span>
+                </div>
+              </a>
+            ))
+          }
         </section>
         {
           work.pdfPage && (

@@ -33,7 +33,8 @@ export async function simplifyEditorial(root) {
       } else {
         delete entry.slug;
         if (collection === 'works') {
-          entry.author = reference('authors', entry.author);
+          if (entry.authors) entry.authors = entry.authors.map((id) => reference('authors', id));
+          else entry.author = reference('authors', entry.author);
           // The former zero was a default, not an intentional override.
           if (entry.order === 0) delete entry.order;
         }

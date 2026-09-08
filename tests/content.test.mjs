@@ -172,7 +172,7 @@ test('saved filenames keep addresses and references stable after names change', 
     data.works.map((w) => w.slug),
     ['a-poem', 'a-poem-1'],
   );
-  assert.ok(data.works.every((w) => w.author === 'writer'));
+  assert.ok(data.works.every((w) => w.authors.length === 1 && w.authors[0] === 'writer'));
   assert.equal(data.authors[0].name, 'New display name');
   assert.deepEqual(data.issues[0].featuredWorks, ['a-poem-1', 'a-poem']);
 });
@@ -262,4 +262,84 @@ test('migration removes retired fields, retains sample drafts, and preserves lin
   assert.equal((await loadContent(root, true)).works.length, 4);
   await simplifyEditorial(root);
   assert.equal(await readFile(file, 'utf8'), once);
+});
+
+test('ordered coauthors accept CMS references and legacy single-author records', () => {
+  const base = { slug: 'shared', title: 'Shared', issue: '2026', category: 'Poetry' };
+  assert.deepEqual(workSchema.parse({ ...base, author: 'writer' }).authors, ['writer']);
+  assert.deepEqual(
+    workSchema.parse({ ...base, authors: ['content/authors/writer.json', 'coauthor'] }).authors,
+    ['writer', 'coauthor'],
+  );
+  assert.throws(() => workSchema.parse({ ...base, authors: [] }));
+  assert.throws(() =>
+    workSchema.parse({ ...base, authors: ['writer', 'content/authors/writer.json'] }),
+  );
+});
+
+test('every coauthor must exist and be published before a shared work can publish', async (t) => {
+  const base = {
+    slug: 'shared',
+    title: 'Shared',
+    issue: '2026',
+    category: 'Poetry',
+    status: 'published',
+  };
+  const missing = await fixture(t, { works: [{ ...base, authors: ['writer', 'missing'] }] });
+  await assert.rejects(loadContent(missing), /author missing does not exist/);
+  const privateAuthor = await fixture(t, {
+    works: [{ ...base, authors: ['writer', 'secret-writer'] }],
+  });
+  await assert.rejects(loadContent(privateAuthor), /publish the author/);
+  assert.deepEqual((await loadContent(privateAuthor, true)).works[0].authors, [
+    'writer',
+    'secret-writer',
+  ]);
+});
+
+test('formatted poetry keeps source text and extracts a clean excerpt', async (t) => {
+  const body = 'A *quiet* line\n  **indented** line\n\nLast stanza';
+  const root = await fixture(t, {
+    works: [
+      {
+        slug: 'formatted',
+        title: 'Formatted',
+        issue: '2026',
+        author: 'writer',
+        category: 'Poetry',
+        body,
+        bodyFormat: 'markdown',
+        poetryAlignment: 'center',
+        status: 'published',
+      },
+    ],
+  });
+  const work = (await loadContent(root)).works[0];
+  assert.equal(work.body, body);
+  assert.equal(work.poetryAlignment, 'center');
+  assert.equal(work.excerpt, 'A quiet line indented line Last stanza');
+});
+
+test('editorial migration preserves ordered coauthors on repeated runs', async (t) => {
+  const root = await fixture(t, {
+    works: [
+      {
+        slug: 'shared',
+        title: 'Shared',
+        issue: '2026',
+        authors: ['writer', 'secret-writer'],
+        category: 'Poetry',
+        status: 'draft',
+      },
+    ],
+  });
+  await simplifyEditorial(root);
+  await simplifyEditorial(root);
+  const entry = JSON.parse(await readFile(path.join(root, 'works/shared.json'), 'utf8'));
+  assert.deepEqual(entry.authors, [
+    'content/authors/writer.json',
+    'content/authors/secret-writer.json',
+  ]);
+  assert.equal(entry.status, 'draft');
+  assert.equal(entry.author, undefined);
 });

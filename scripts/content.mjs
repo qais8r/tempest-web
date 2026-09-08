@@ -49,39 +49,54 @@ export const authorSchema = z.object({
   bio: z.string().default(''),
   portrait: media.default(''),
 });
-export const workSchema = z.object({
-  ...common,
-  slug,
-  title: z.string().min(1),
-  author: reference('authors'),
-  issue: year,
-  category: z.string().min(1),
-  order: optionalNumber(z.number().int().nonnegative()),
-  body: z.string().default(''),
-  pdfPage: optionalNumber(z.number().int().positive()),
-  about: z.string().default(''),
-  artworks: z
-    .array(
-      z.object({
-        image: media.refine(Boolean),
-        alt: z.string().min(1),
-        caption: z.string().default(''),
-      }),
-    )
-    .default([]),
-  recordings: z
-    .array(
-      z.object({
-        file: media.refine((v) => v.endsWith('.mp3')),
-        title: z
-          .string()
-          .nullish()
-          .transform((value) => value?.trim() || ''),
-        description: z.string().default(''),
-      }),
-    )
-    .default([]),
-});
+export const workSchema = z.preprocess(
+  (value) => {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      const { author, ...work } = value;
+      // Legacy records keep their URLs and continue to load. New CMS records use authors.
+      return { ...work, authors: work.authors ?? (author ? [author] : undefined) };
+    }
+    return value;
+  },
+  z.object({
+    ...common,
+    slug,
+    title: z.string().min(1),
+    authors: z
+      .array(reference('authors'))
+      .min(1)
+      .refine((values) => new Set(values).size === values.length, 'Choose each author only once'),
+    issue: year,
+    category: z.string().min(1),
+    order: optionalNumber(z.number().int().nonnegative()),
+    body: z.string().default(''),
+    bodyFormat: z.enum(['plain', 'markdown']).default('plain'),
+    poetryAlignment: z.enum(['left', 'center']).default('left'),
+    pdfPage: optionalNumber(z.number().int().positive()),
+    about: z.string().default(''),
+    artworks: z
+      .array(
+        z.object({
+          image: media.refine(Boolean),
+          alt: z.string().min(1),
+          caption: z.string().default(''),
+        }),
+      )
+      .default([]),
+    recordings: z
+      .array(
+        z.object({
+          file: media.refine((v) => v.endsWith('.mp3')),
+          title: z
+            .string()
+            .nullish()
+            .transform((value) => value?.trim() || ''),
+          description: z.string().default(''),
+        }),
+      )
+      .default([]),
+  }),
+);
 const siteSchema = z.object({
   school: z.string(),
   description: z.string(),
@@ -137,11 +152,13 @@ export async function loadContent(root, preview = false) {
   for (const w of works) {
     if (!issues.some((i) => i.year === w.issue))
       throw new Error(`${w.slug}: issue ${w.issue} does not exist`);
-    if (!authors.some((a) => a.slug === w.author))
-      throw new Error(`${w.slug}: author ${w.author} does not exist`);
+    for (const author of w.authors) {
+      if (!authors.some((a) => a.slug === author))
+        throw new Error(`${w.slug}: author ${author} does not exist`);
+    }
   }
   for (const w of publishedWorks) {
-    if (!publishedAuthors.some((a) => a.slug === w.author))
+    if (w.authors.some((author) => !publishedAuthors.some((a) => a.slug === author)))
       throw new Error(`${w.slug}: publish the author before publishing their work`);
   }
   const site = siteSchema.parse({ ...JSON.parse(rawSite), ...JSON.parse(rawAbout) });
@@ -166,7 +183,7 @@ export async function loadContent(root, preview = false) {
       )
       .map((work) => ({
         ...work,
-        excerpt: workExcerpt(work.body, work.category),
+        excerpt: workExcerpt(work.body, work.bodyFormat === 'markdown' ? 'Prose' : work.category),
         recordings: work.recordings.map((recording, index) => ({
           ...recording,
           title:

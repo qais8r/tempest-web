@@ -733,6 +733,9 @@ button,
   margin-top: 1.5rem;
   text-decoration: none;
 }
+.author-teaser + .author-teaser {
+  margin-top: 1.5rem;
+}
 .author-teaser img,
 .avatar-letter {
   width: 3.5rem;
