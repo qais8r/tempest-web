@@ -1,0 +1,45 @@
+---
+import type { Issue } from '../lib/content';
+import { worksFor, readerUrl } from '../lib/content';
+import WorkCard from './WorkCard.astro';
+
+interface Props {
+  issue: Issue;
+}
+
+const { issue } = Astro.props;
+const list = worksFor(issue);
+const columnCount = Math.min(4, Math.max(1, list.length));
+const baseColumnSize = Math.floor(list.length / columnCount);
+const longerColumns = list.length % columnCount;
+let columnOffset = 0;
+const workColumns = Array.from({ length: columnCount }, (_, index) => {
+  const size = baseColumnSize + (index < longerColumns ? 1 : 0);
+  const column = list.slice(columnOffset, columnOffset + size);
+  columnOffset += size;
+  return column;
+});
+---
+
+<section id="works" class="issue-works">
+  <div class="section-heading">
+    <div><span class="eyebrow">Beyond the printed page</span><h2>Companion works</h2></div>
+  </div>{
+    list.length ? (
+      <div class="work-grid">
+        {workColumns.map((column) => (
+          <div class="work-column">
+            {column.map((work) => (
+              <WorkCard work={work} layout="column" />
+            ))}
+          </div>
+        ))}
+      </div>
+    ) : (
+      <p class="empty-note">
+        The complete collection is available in the <a href={readerUrl(issue)}>issue reader</a>.
+        Companion works will appear here when added.
+      </p>
+    )
+  }
+</section>

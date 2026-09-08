@@ -15,6 +15,23 @@ test('the homepage and issue use the same daily featured works', async ({ page }
   expect(issue).toEqual(homepage);
 });
 
+test('the homepage and current issue show the same companion works', async ({ page }) => {
+  const companionLinks = () =>
+    page
+      .locator('.issue-works .work-card-link')
+      .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
+
+  await page.goto('');
+  await expect(page.locator('.issue-works h2')).toHaveText('Companion works');
+  const homepage = await companionLinks();
+
+  await page.goto('issues/2026/');
+  const issue = await companionLinks();
+
+  expect(homepage.length).toBeGreaterThan(0);
+  expect(homepage).toEqual(issue);
+});
+
 test('work excerpts fill and clamp to three lines', async ({ page }) => {
   await page.setViewportSize({ width: 481, height: 900 });
   await page.goto('issues/2026/');
