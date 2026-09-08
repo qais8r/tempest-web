@@ -29,3 +29,17 @@ test('author cards omit redundant metadata and align their bottom rules', async 
     .evaluateAll((names) => names.map((name) => name.getBoundingClientRect().bottom));
   expect(new Set(ruleBottoms.map(Math.round)).size).toBe(1);
 });
+
+test('author work previews fill the copy column beside artwork', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('authors/riley-chen/');
+
+  const widths = await page
+    .locator('a[href$="/the-light-we-leave/"] .work-card-copy')
+    .evaluate((copy) => ({
+      copy: copy.getBoundingClientRect().width,
+      excerpt: copy.querySelector('.work-excerpt').getBoundingClientRect().width,
+    }));
+
+  expect(widths.excerpt).toBeCloseTo(widths.copy, 1);
+});

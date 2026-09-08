@@ -300,9 +300,6 @@ button,
 .work-card-link.has-artwork {
   grid-template-columns: minmax(0, 1fr) 8rem;
 }
-.work-card-link:not(.has-artwork) .work-excerpt {
-  max-width: none;
-}
 .work-card h3 {
   font: 500 clamp(1.35rem, 1.65vw, 1.85rem)/1 var(--serif);
   font-style: italic;
@@ -319,7 +316,6 @@ button,
   -webkit-line-clamp: 3;
   font: italic 1.02rem/1.2 var(--serif);
   margin: 0;
-  max-width: 15rem;
 }
 .work-thumb {
   width: 8rem;
