@@ -3,12 +3,13 @@ import { authorNames, url, imageSrcset, type Work } from '../lib/content';
 import Icon from './Icon.astro';
 interface Props {
   work: Work;
+  layout?: 'compact' | 'column';
 }
-const { work } = Astro.props;
+const { work, layout = 'compact' } = Astro.props;
 const artwork = work.artworks[0];
 ---
 
-<article class="work-card">
+<article class:list={['work-card', `work-card-${layout}`]}>
   <a
     class:list={['work-card-link', { 'has-artwork': artwork }]}
     href={url(`/works/${work.slug}/`)}
@@ -43,7 +44,11 @@ const artwork = work.artworks[0];
           class="work-thumb"
           src={url(artwork.thumbnailSources?.[0].src || artwork.image)}
           srcset={imageSrcset(artwork.thumbnailSources)}
-          sizes="(max-width: 720px) 7.2rem, (max-width: 1180px) 6.5rem, 8rem"
+          sizes={
+            layout === 'column'
+              ? '(max-width: 480px) calc(100vw - 2rem), (max-width: 720px) 40vw, (max-width: 900px) calc((100vw - 5.2rem) / 2), (max-width: 1180px) calc((100vw - 7.4rem) / 3), calc((100vw - 12.6rem) / 4)'
+              : '(max-width: 720px) 7.2rem, (max-width: 1180px) 6.5rem, 8rem'
+          }
           width="128"
           height="128"
           alt=""

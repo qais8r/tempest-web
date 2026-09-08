@@ -1,0 +1,19 @@
+{
+  "title": "The distance home",
+  "authors": ["content/authors/alex-morgan.json"],
+  "category": "Photography",
+  "body": "",
+  "artworks": [
+    {
+      "image": "/media/images/2026-hero.jpg",
+      "alt": "A canyon beneath a wide sky",
+      "caption": "Sample image used for the layout preview."
+    }
+  ],
+  "recordings": [],
+  "issue": "2026",
+  "order": 8,
+  "status": "draft",
+  "pdfPage": null,
+  "about": "A draft fixture used to preview the companion works layout."
+}

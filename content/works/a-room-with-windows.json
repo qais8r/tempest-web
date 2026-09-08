@@ -1,0 +1,19 @@
+{
+  "title": "A room with windows",
+  "authors": ["content/authors/jordan-kim.json"],
+  "category": "Prose",
+  "body": "For most of the afternoon, the room held the pale light without changing. We watched the weather cross the glass and tried to name what was different.",
+  "artworks": [
+    {
+      "image": "/media/images/2026-hero.jpg",
+      "alt": "A canyon beneath a wide sky",
+      "caption": "Sample image used for the layout preview."
+    }
+  ],
+  "recordings": [],
+  "issue": "2026",
+  "order": 6,
+  "status": "draft",
+  "pdfPage": null,
+  "about": "A draft fixture used to preview the companion works layout."
+}

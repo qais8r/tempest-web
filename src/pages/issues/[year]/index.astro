@@ -8,6 +8,16 @@ export function getStaticPaths() {
 }
 const { issue } = Astro.props;
 const list = worksFor(issue);
+const columnCount = Math.min(4, Math.max(1, list.length));
+const baseColumnSize = Math.floor(list.length / columnCount);
+const longerColumns = list.length % columnCount;
+let columnOffset = 0;
+const workColumns = Array.from({ length: columnCount }, (_, index) => {
+  const size = baseColumnSize + (index < longerColumns ? 1 : 0);
+  const column = list.slice(columnOffset, columnOffset + size);
+  columnOffset += size;
+  return column;
+});
 ---
 
 <Site title={`${issue.year} Issue`}
@@ -20,8 +30,12 @@ const list = worksFor(issue);
       </div>{
         list.length ? (
           <div class="work-grid">
-            {list.map((work) => (
-              <WorkCard work={work} />
+            {workColumns.map((column) => (
+              <div class="work-column">
+                {column.map((work) => (
+                  <WorkCard work={work} layout="column" />
+                ))}
+              </div>
             ))}
           </div>
         ) : (

@@ -1,0 +1,19 @@
+{
+  "title": "After the rain",
+  "authors": ["content/authors/riley-chen.json"],
+  "category": "Visual art",
+  "body": "A study of the horizon after a storm, when familiar shapes return a little at a time.",
+  "artworks": [
+    {
+      "image": "/media/images/sample-light.jpg",
+      "alt": "Clouds over a distant horizon",
+      "caption": "Sample image used for the layout preview."
+    }
+  ],
+  "recordings": [],
+  "issue": "2026",
+  "order": 10,
+  "status": "draft",
+  "pdfPage": null,
+  "about": "A draft fixture used to preview the companion works layout."
+}

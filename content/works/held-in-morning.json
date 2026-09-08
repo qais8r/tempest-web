@@ -1,0 +1,19 @@
+{
+  "title": "Held in morning",
+  "authors": ["content/authors/riley-chen.json"],
+  "category": "Photography",
+  "body": "",
+  "artworks": [
+    {
+      "image": "/media/images/sample-light.jpg",
+      "alt": "Clouds over a distant horizon",
+      "caption": "Sample image used for the layout preview."
+    }
+  ],
+  "recordings": [],
+  "issue": "2026",
+  "order": 5,
+  "status": "draft",
+  "pdfPage": null,
+  "about": "A draft fixture used to preview the companion works layout."
+}

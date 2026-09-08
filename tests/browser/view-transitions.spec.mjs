@@ -52,7 +52,7 @@ test('author work cards use work names on both pages and on Back', async ({
   transitions,
 }) => {
   await transitions.visit(author);
-  paired(await transitions.navigate(() => page.locator('.work-card-link').click(), work), [
+  paired(await transitions.navigate(() => page.locator(`a[href$="/${work}"]`).click(), work), [
     'work-title',
     'work-author',
   ]);
@@ -104,7 +104,7 @@ test('stored work plans work without the Navigation API or pageswap activation',
     Object.defineProperty(PageSwapEvent.prototype, 'activation', { get: () => null });
   });
   await transitions.visit(author);
-  paired(await transitions.navigate(() => page.locator('.work-card-link').click(), work), [
+  paired(await transitions.navigate(() => page.locator(`a[href$="/${work}"]`).click(), work), [
     'work-title',
     'work-author',
   ]);
@@ -119,7 +119,10 @@ test('blocked storage falls back to a complete page transition', async ({ page, 
     }
   });
   await transitions.visit(author);
-  const result = await transitions.navigate(() => page.locator('.work-card-link').click(), work);
+  const result = await transitions.navigate(
+    () => page.locator(`a[href$="/${work}"]`).click(),
+    work,
+  );
   paired(result, []);
   expect(result.outgoing.root).not.toBe('none');
   expect(result.incoming.root).not.toBe('none');
@@ -131,7 +134,7 @@ test('reduced motion disables transitions and keeps navigation working', async (
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await transitions.visit(author);
-  await transitions.navigate(() => page.locator('.work-card-link').click(), work, {
+  await transitions.navigate(() => page.locator(`a[href$="/${work}"]`).click(), work, {
     animated: false,
   });
 });
