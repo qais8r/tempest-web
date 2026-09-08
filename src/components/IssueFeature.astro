@@ -1,6 +1,7 @@
 ---
 import type { Issue } from '../lib/content';
 import { worksFor, readerUrl, issueUrl, url, imageSrcset } from '../lib/content';
+import { dailySelection } from '../lib/daily-selection.mjs';
 import WorkCard from './WorkCard.astro';
 import Icon from './Icon.astro';
 interface Props {
@@ -9,12 +10,11 @@ interface Props {
 }
 const { issue, isHome = false } = Astro.props;
 const allWorks = worksFor(issue);
-const shuffled = [...allWorks];
-for (let index = shuffled.length - 1; index > 0; index--) {
-  const swapWith = Math.floor(Math.random() * (index + 1));
-  [shuffled[index], shuffled[swapWith]] = [shuffled[swapWith], shuffled[index]];
-}
-const selected = shuffled.slice(0, 3);
+const selected = dailySelection(allWorks, {
+  count: 3,
+  seed: issue.year,
+  key: (work) => work.slug,
+});
 ---
 
 <section class="issue-feature" aria-label={`${issue.year} issue`}>

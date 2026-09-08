@@ -1,5 +1,20 @@
 import { test, expect } from '@playwright/test';
 
+test('the homepage and issue use the same daily featured works', async ({ page }) => {
+  const featuredLinks = () =>
+    page
+      .locator('.featured-works .work-card-link')
+      .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
+
+  await page.goto('');
+  const homepage = await featuredLinks();
+  await page.goto('issues/2026/');
+  const issue = await featuredLinks();
+
+  expect(homepage).toHaveLength(3);
+  expect(issue).toEqual(homepage);
+});
+
 test('medium companion-work columns flow independently without row gaps', async ({ page }) => {
   await page.setViewportSize({ width: 800, height: 900 });
   await page.goto('issues/2026/');
