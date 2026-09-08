@@ -45,7 +45,6 @@ const fieldsIssue = [
     options: { media: 'pdfs', extensions: ['pdf'], rename: false },
   }),
   f('heroCredit', 'Image title and credit', 'string'),
-  ref('featuredWorks', 'Featured works, in homepage order', 'works', 'path', 'title', true),
   f('sections', 'Reader contents', 'object', {
     list: true,
     fields: [
@@ -115,11 +114,6 @@ const fieldsWork = [
     description: 'Count the cover as page 1. Leave empty for web-only companion works.',
   }),
   f('about', 'About the work', 'rich-text', { options: { format: 'markdown', media: false } }),
-  f('order', 'Reading order override', 'number', {
-    options: { min: 0 },
-    description:
-      'Optional. Normally works follow PDF page order, then title for works without a page. Enter a number to use instead of the PDF page when sorting. Homepage selections have their own order.',
-  }),
 ];
 const config = {
   media: [

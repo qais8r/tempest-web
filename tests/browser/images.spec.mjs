@@ -4,7 +4,16 @@ for (const width of [390, 1280]) {
   test(`cards load sized images with the Pages prefix at ${width}px`, async ({ page, request }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('issues/2026/');
-    const thumb = page.locator('.featured-works .work-thumb').first();
+    const hero = page.locator('.hero-image');
+    await expect
+      .poll(() => hero.evaluate((img) => img.complete && img.naturalWidth > 0))
+      .toBe(true);
+    expect(await hero.evaluate((img) => img.currentSrc)).toMatch(
+      /\/tempest-web\/media\/covers\/2026-640\.webp$/,
+    );
+
+    await page.goto('authors/riley-chen/');
+    const thumb = page.locator('a[href$="/the-light-we-leave/"] .work-thumb');
     await thumb.scrollIntoViewIfNeeded();
     await expect
       .poll(() => thumb.evaluate((img) => img.complete && img.naturalWidth > 0))
@@ -19,14 +28,6 @@ for (const width of [390, 1280]) {
     expect(selected.width).toBeLessThanOrEqual(128);
     expect(selected.rendered).toBeCloseTo(selected.height, 1);
     expect((await request.get(selected.src)).ok()).toBe(true);
-
-    const hero = page.locator('.hero-image');
-    await expect
-      .poll(() => hero.evaluate((img) => img.complete && img.naturalWidth > 0))
-      .toBe(true);
-    expect(await hero.evaluate((img) => img.currentSrc)).toMatch(
-      /\/tempest-web\/media\/covers\/2026-640\.webp$/,
-    );
 
     await page.goto('issues/');
     const cover = page.locator('.archive-cover img').first();

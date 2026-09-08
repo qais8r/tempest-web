@@ -75,15 +75,6 @@ content:
       - name: heroCredit
         label: Image title and credit
         type: string
-      - name: featuredWorks
-        label: Featured works, in homepage order
-        type: reference
-        options:
-          collection: works
-          value: "{path}"
-          label: "{fields.title}"
-          search: title
-          multiple: true
       - name: sections
         label: Reader contents
         type: object
@@ -231,14 +222,6 @@ content:
         options:
           format: markdown
           media: false
-      - name: order
-        label: Reading order override
-        type: number
-        options:
-          min: 0
-        description: Optional. Normally works follow PDF page order, then title for
-          works without a page. Enter a number to use instead of the PDF page
-          when sorting. Homepage selections have their own order.
     operations:
       rename: false
   - name: authors

@@ -7,7 +7,7 @@ import { simplifyEditorial } from '../scripts/simplify-editorial.mjs';
 import { isPoetry } from '../scripts/text.mjs';
 import { contentFixture as fixture } from './helpers/content-fixture.mjs';
 
-test('production excludes all draft records, assets and homepage references', async (t) => {
+test('production excludes all draft records and assets', async (t) => {
   const data = await loadContent(await fixture(t));
   assert.deepEqual(
     data.issues.map((i) => i.year),
@@ -21,7 +21,6 @@ test('production excludes all draft records, assets and homepage references', as
     data.authors.map((a) => a.slug),
     ['writer'],
   );
-  assert.deepEqual(data.issues[0].featuredWorks, ['a-poem']);
   assert.deepEqual([...referencedMedia(data)].sort(), [
     '/media/audio/public.mp3',
     '/media/pdfs/2026.pdf',
@@ -164,7 +163,6 @@ test('saved filenames keep addresses and references stable after names change', 
     year: '2026',
     pdf: '/media/pdfs/2026.pdf',
     status: 'published',
-    featuredWorks: ['content/works/a-poem-1.json', 'content/works/a-poem.json'],
   };
   await writeFile(path.join(root, 'issues/2026.json'), JSON.stringify(issue));
   const data = await loadContent(root);
@@ -174,25 +172,24 @@ test('saved filenames keep addresses and references stable after names change', 
   );
   assert.ok(data.works.every((w) => w.authors.length === 1 && w.authors[0] === 'writer'));
   assert.equal(data.authors[0].name, 'New display name');
-  assert.deepEqual(data.issues[0].featuredWorks, ['a-poem-1', 'a-poem']);
 });
 
-test('works sort by PDF page, then title, with optional position overrides', async (t) => {
+test('works sort by PDF page, then title', async (t) => {
   const base = { issue: '2026', author: 'writer', category: 'Prose', status: 'published' };
   const data = await loadContent(
     await fixture(t, {
       works: [
         { ...base, slug: 'z-web', title: 'Z web' },
-        { ...base, slug: 'late', title: 'Late', pdfPage: 20, order: '' },
-        { ...base, slug: 'early', title: 'Early', pdfPage: 2, order: null },
+        { ...base, slug: 'late', title: 'Late', pdfPage: 20 },
+        { ...base, slug: 'early', title: 'Early', pdfPage: 2 },
         { ...base, slug: 'a-web', title: 'A web', pdfPage: null },
-        { ...base, slug: 'override', title: 'Override', pdfPage: 30, order: 1 },
+        { ...base, slug: 'last', title: 'Last', pdfPage: 30 },
       ],
     }),
   );
   assert.deepEqual(
     data.works.map((w) => w.slug),
-    ['override', 'early', 'late', 'a-web', 'z-web'],
+    ['early', 'late', 'last', 'a-web', 'z-web'],
   );
 });
 
@@ -249,14 +246,19 @@ test('migration removes retired fields, retains sample drafts, and preserves lin
   const root = await fixture(t);
   const file = path.join(root, 'works/sample-poem.json');
   const sample = JSON.parse(await readFile(file, 'utf8'));
-  await writeFile(file, JSON.stringify({ ...sample, demo: true, status: 'published' }));
+  await writeFile(file, JSON.stringify({ ...sample, demo: true, order: 12, status: 'published' }));
+  const issueFile = path.join(root, 'issues/2026.json');
+  const issue = JSON.parse(await readFile(issueFile, 'utf8'));
+  await writeFile(issueFile, JSON.stringify({ ...issue, featuredWorks: ['sample-poem'] }));
   await simplifyEditorial(root);
   const once = await readFile(file, 'utf8');
   const entry = JSON.parse(once);
   assert.equal(entry.status, 'draft');
   assert.equal(entry.demo, undefined);
   assert.equal(entry.slug, undefined);
+  assert.equal(entry.order, undefined);
   assert.equal(entry.author, 'content/authors/writer.json');
+  assert.equal(JSON.parse(await readFile(issueFile, 'utf8')).featuredWorks, undefined);
   assert.equal(JSON.parse(await readFile(path.join(root, 'site.json'), 'utf8')).currentIssue, null);
   assert.equal((await loadContent(root)).works.length, 1);
   assert.equal((await loadContent(root, true)).works.length, 4);

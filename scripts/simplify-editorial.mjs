@@ -28,15 +28,14 @@ export async function simplifyEditorial(root) {
       delete entry.demo;
       if (collection === 'issues') {
         delete entry.title;
-        entry.featuredWorks = (entry.featuredWorks || []).map((id) => reference('works', id));
+        delete entry.featuredWorks;
         if (entry.status === 'published') publishedYears.push(entry.year);
       } else {
         delete entry.slug;
         if (collection === 'works') {
           if (entry.authors) entry.authors = entry.authors.map((id) => reference('authors', id));
           else entry.author = reference('authors', entry.author);
-          // The former zero was a default, not an intentional override.
-          if (entry.order === 0) delete entry.order;
+          delete entry.order;
         }
       }
       await write(file, entry);

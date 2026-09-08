@@ -37,7 +37,6 @@ export const issueSchema = z.object({
   description: z.string().default(''),
   pdf: media.refine((v) => v.endsWith('.pdf')),
   heroCredit: z.string().default(''),
-  featuredWorks: z.array(reference('works')).default([]),
   sections: z
     .array(z.object({ title: z.string().min(1), page: z.number().int().positive() }))
     .default([]),
@@ -68,7 +67,6 @@ export const workSchema = z.preprocess(
       .refine((values) => new Set(values).size === values.length, 'Choose each author only once'),
     issue: year,
     category: z.string().min(1),
-    order: optionalNumber(z.number().int().nonnegative()),
     body: z.string().default(''),
     bodyFormat: z.enum(['plain', 'markdown']).default('plain'),
     poetryAlignment: z.enum(['left', 'center']).default('left'),
@@ -168,16 +166,11 @@ export async function loadContent(root, preview = false) {
   return {
     preview,
     site,
-    issues: publishedIssues.map((i) => ({
-      ...i,
-      featuredWorks: i.featuredWorks.filter((s) =>
-        publishedWorks.some((w) => w.slug === s && w.issue === i.year),
-      ),
-    })),
+    issues: publishedIssues,
     works: publishedWorks
       .sort(
         (a, b) =>
-          (a.order ?? a.pdfPage ?? Infinity) - (b.order ?? b.pdfPage ?? Infinity) ||
+          (a.pdfPage ?? Infinity) - (b.pdfPage ?? Infinity) ||
           a.title.localeCompare(b.title, 'en') ||
           a.slug.localeCompare(b.slug, 'en'),
       )

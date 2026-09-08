@@ -21,7 +21,6 @@ export async function contentFixture(t, overrides = {}) {
         title: '2026',
         status: 'published',
         pdf: '/media/pdfs/2026.pdf',
-        featuredWorks: ['a-poem', 'secret-poem', 'sample-poem'],
       },
       { year: '2027', title: 'Secret issue', status: 'draft', pdf: '/media/pdfs/secret.pdf' },
     ],

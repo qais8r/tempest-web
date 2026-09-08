@@ -9,10 +9,12 @@ interface Props {
 }
 const { issue, isHome = false } = Astro.props;
 const allWorks = worksFor(issue);
-const featured = issue.featuredWorks
-  .map((s) => allWorks.find((w) => w.slug === s))
-  .filter(Boolean) as typeof allWorks;
-const selected = featured.length ? featured : allWorks.slice(0, 3);
+const shuffled = [...allWorks];
+for (let index = shuffled.length - 1; index > 0; index--) {
+  const swapWith = Math.floor(Math.random() * (index + 1));
+  [shuffled[index], shuffled[swapWith]] = [shuffled[swapWith], shuffled[index]];
+}
+const selected = shuffled.slice(0, 3);
 ---
 
 <section class="issue-feature" aria-label={`${issue.year} issue`}>

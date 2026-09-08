@@ -7,7 +7,7 @@ This private repository holds issues, works, authors, and uploaded files. Open i
 1. Open **Issues** and add the year and PDF. Upload a file such as `2027.pdf`. The first PDF page is used automatically as the cover at its original proportions. Add its image title and credit if needed.
 2. Open **Authors** and add each contributor's name, biography, and optional portrait.
 3. Open **Works**. Choose one issue and one author, enter the work, and add any artwork or MP3 recordings. Choose the Poetry category to preserve line breaks and indentation. Preview excerpts come from the written work automatically, and the first gallery artwork becomes the preview image. Works without artwork use the full card width for text. A PDF page number adds a link into the reader; count the cover as page 1.
-4. Return to the issue and select its featured works in the order they should appear. Reader contents can link to PDF page numbers. The newest published year becomes the homepage issue automatically. Use **Site settings → Homepage issue override** only to feature an older issue; clear it to return to automatic selection.
+4. Return to the issue and add reader contents if you want links to specific PDF pages. The site chooses three works at random for the issue feature when it builds. The newest published year becomes the homepage issue automatically. Use **Site settings → Homepage issue override** only to feature an older issue; clear it to return to automatic selection.
 5. Set the issue, its authors, and the works you want to show to **Ready to publish**. Leave unfinished records as **Draft**. Test entries are ordinary drafts. Delete them when testing is complete, or leave them as Draft to keep them off the published site.
 6. Use **Build private preview** to build a private downloadable preview. The current GitHub Pages setup cannot host private drafts in the browser; ask the maintainer to open this artifact locally. A protected hosted preview is a future hosting option.
 7. Click **Publish website**. Only ready content appears on the public site. Drafts and their unused files stay private. The result link appears in the action's run summary.
@@ -20,7 +20,7 @@ Use **About** to edit the publication description and footer statement. Line bre
 
 **Site settings** holds the school name, search-engine description, and optional homepage issue override. These rarely need changing.
 
-Works normally follow their starting PDF page number. Works without a page follow in alphabetical title order. The optional **Reading order override** uses your number instead of the PDF page for sorting. The issue's featured-work selection has its own order.
+Works follow their starting PDF page number. Works without a page follow in alphabetical title order.
 
 ## Files and corrections
 

@@ -4,11 +4,6 @@
   "pdf": "/media/pdfs/2026.pdf",
   "status": "published",
   "heroCredit": "As the Storm Approaches · Isaac Daybell",
-  "featuredWorks": [
-    "content/works/anatomy-of-quiet.json",
-    "content/works/between-shifts.json",
-    "content/works/the-light-we-leave.json"
-  ],
   "sections": [
     {
       "title": "Contents",

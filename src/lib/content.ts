@@ -13,7 +13,6 @@ export interface Issue {
   description: string;
   pdf: string;
   heroCredit: string;
-  featuredWorks: string[];
   sections: { title: string; page: number }[];
   cover: string;
   coverWidth: number;
@@ -30,7 +29,6 @@ export interface Work {
   authors: string[];
   issue: string;
   category: string;
-  order: number | null;
   excerpt: string;
   body: string;
   bodyFormat: 'plain' | 'markdown';
