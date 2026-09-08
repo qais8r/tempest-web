@@ -9,7 +9,7 @@ export function initials(name) {
   return words.length > 1 ? `${words[0][0]}${words.at(-1)[0]}` : words[0]?.[0] || '';
 }
 
-export function workExcerpt(body, category, limit = 120) {
+export function workExcerpt(body, category, limit = 320) {
   // Poetry is literal text; prose excerpts omit Markdown and HTML formatting.
   const text = isPoetry(category)
     ? body

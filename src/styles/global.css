@@ -313,6 +313,10 @@ button,
   margin: 0.2rem 0 0.8rem;
 }
 .work-excerpt {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
   font: italic 1.02rem/1.2 var(--serif);
   margin: 0;
   max-width: 15rem;

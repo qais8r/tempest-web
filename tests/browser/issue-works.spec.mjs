@@ -15,6 +15,27 @@ test('the homepage and issue use the same daily featured works', async ({ page }
   expect(issue).toEqual(homepage);
 });
 
+test('work excerpts fill and clamp to three lines', async ({ page }) => {
+  await page.setViewportSize({ width: 481, height: 900 });
+  await page.goto('issues/2026/');
+  const excerpt = page.locator('.issue-works a[href$="/between-shifts/"] .work-excerpt');
+  const metrics = await excerpt.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      characters: element.textContent.length,
+      clientHeight: element.clientHeight,
+      scrollHeight: element.scrollHeight,
+      lineHeight: Number.parseFloat(style.lineHeight),
+      clamp: style.webkitLineClamp,
+    };
+  });
+
+  expect(metrics.characters).toBeGreaterThan(120);
+  expect(metrics.clamp).toBe('3');
+  expect(metrics.clientHeight).toBeCloseTo(metrics.lineHeight * 3, 0);
+  expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight);
+});
+
 test('medium companion-work columns flow independently without row gaps', async ({ page }) => {
   await page.setViewportSize({ width: 800, height: 900 });
   await page.goto('issues/2026/');
