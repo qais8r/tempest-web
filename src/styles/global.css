@@ -828,6 +828,36 @@ button,
   margin-top: 0;
   padding: 0.1rem 0;
 }
+.more-by-author {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--ink);
+}
+.more-by-author > .eyebrow {
+  display: block;
+  margin: 0 0 0.7rem;
+}
+.more-by-author ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.more-by-author li {
+  border-bottom: 1px solid var(--line);
+}
+.more-by-author a {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.8rem 0;
+  font: italic 1.15rem/1.15 var(--serif);
+  text-decoration: none;
+}
+.more-by-author a:hover span {
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
 .author-profile {
   display: grid;
   grid-template-columns: minmax(18rem, 0.8fr) minmax(22rem, 1.4fr);
