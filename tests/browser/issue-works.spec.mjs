@@ -53,15 +53,24 @@ test('work excerpts fill and clamp to three lines', async ({ page }) => {
   expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight);
 });
 
-test('medium companion-work columns flow independently without row gaps', async ({ page }) => {
-  await page.setViewportSize({ width: 800, height: 900 });
+test('companion works balance by rendered height across responsive columns', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('issues/2026/');
+  await expect
+    .poll(() =>
+      page.locator('.issue-works .work-grid').evaluate((grid) => ({
+        display: getComputedStyle(grid).display,
+        columnCount: getComputedStyle(grid).columnCount,
+      })),
+    )
+    .toEqual({ display: 'block', columnCount: '4' });
+
+  await page.setViewportSize({ width: 800, height: 900 });
 
   const layout = await page.locator('.issue-works .work-grid').evaluate((grid) => ({
     columnCount: getComputedStyle(grid).columnCount,
-    groupDisplay: getComputedStyle(grid.querySelector('.work-column')).display,
   }));
-  expect(layout).toEqual({ columnCount: '2', groupDisplay: 'contents' });
+  expect(layout).toEqual({ columnCount: '2' });
 
   const gaps = await page.locator('.issue-works .work-card-column').evaluateAll((cards) => {
     const columns = new Map();

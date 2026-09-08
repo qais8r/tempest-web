@@ -9,16 +9,6 @@ interface Props {
 
 const { issue } = Astro.props;
 const list = worksFor(issue);
-const columnCount = Math.min(4, Math.max(1, list.length));
-const baseColumnSize = Math.floor(list.length / columnCount);
-const longerColumns = list.length % columnCount;
-let columnOffset = 0;
-const workColumns = Array.from({ length: columnCount }, (_, index) => {
-  const size = baseColumnSize + (index < longerColumns ? 1 : 0);
-  const column = list.slice(columnOffset, columnOffset + size);
-  columnOffset += size;
-  return column;
-});
 ---
 
 <section id="works" class="issue-works">
@@ -27,12 +17,8 @@ const workColumns = Array.from({ length: columnCount }, (_, index) => {
   </div>{
     list.length ? (
       <div class="work-grid">
-        {workColumns.map((column) => (
-          <div class="work-column">
-            {column.map((work) => (
-              <WorkCard work={work} layout="column" />
-            ))}
-          </div>
+        {list.map((work) => (
+          <WorkCard work={work} layout="column" />
         ))}
       </div>
     ) : (
