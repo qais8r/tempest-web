@@ -50,6 +50,19 @@ test('long more-by titles truncate to one line', async ({ page }) => {
   expect(heights.title).toBeCloseTo(heights.line, 0);
 });
 
+test('more-by links use the animated red title underline', async ({ page }) => {
+  await page.goto('works/the-light-we-leave/');
+
+  const link = page.locator('.more-by-author a').first();
+  const title = link.locator('span');
+  await expect(title).toHaveCSS('text-decoration-color', 'rgba(0, 0, 0, 0)');
+
+  await link.hover();
+
+  await expect(title).toHaveCSS('text-decoration-color', 'rgb(123, 31, 37)');
+  await expect(title).toHaveCSS('transition-duration', '0.2s');
+});
+
 test('coauthored work pages show more work by each contributor', async ({ page }) => {
   await page.goto('works/shared-study/');
 

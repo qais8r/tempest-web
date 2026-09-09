@@ -305,6 +305,18 @@ button,
   font-style: italic;
   margin: 0.65rem 0 0.25rem;
 }
+.work-card h3,
+.more-by-author a span {
+  text-decoration-line: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.18em;
+  transition: text-decoration-color 0.2s;
+}
+.work-card-link:is(:hover, :focus-visible) h3,
+.more-by-author a:is(:hover, :focus-visible) span {
+  text-decoration-color: var(--red);
+}
 .byline {
   font-style: italic;
   margin: 0.2rem 0 0.8rem;
@@ -846,10 +858,6 @@ button,
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-.more-by-author a:hover span {
-  text-decoration: underline;
-  text-underline-offset: 0.2rem;
 }
 .author-profile {
   display: grid;

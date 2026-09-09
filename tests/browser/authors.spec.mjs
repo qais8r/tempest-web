@@ -43,3 +43,18 @@ test('author work previews fill the copy column beside artwork', async ({ page }
 
   expect(widths.excerpt).toBeCloseTo(widths.copy, 1);
 });
+
+test('work-card hover underlines the title without moving the image', async ({ page }) => {
+  await page.goto('authors/riley-chen/');
+
+  const card = page.locator('a[href$="/the-light-we-leave/"]');
+  const title = card.locator('h3');
+  const image = card.locator('.work-thumb');
+  await expect(title).toHaveCSS('text-decoration-color', 'rgba(0, 0, 0, 0)');
+  const imageTransform = await image.evaluate((element) => getComputedStyle(element).transform);
+
+  await card.hover();
+
+  await expect(title).toHaveCSS('text-decoration-color', 'rgb(123, 31, 37)');
+  await expect(image).toHaveCSS('transform', imageTransform);
+});
