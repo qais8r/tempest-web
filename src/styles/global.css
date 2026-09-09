@@ -670,7 +670,12 @@ button,
   margin: clamp(2.5rem, 4vw, 4rem) 0 0;
 }
 .work-author a {
+  color: inherit;
   text-underline-offset: 0.25rem;
+  transition: color 0.2s ease;
+}
+.work-author a:is(:hover, :focus-visible) {
+  color: var(--red);
 }
 .work-reading-layout {
   display: grid;

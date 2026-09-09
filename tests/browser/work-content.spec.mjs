@@ -26,6 +26,18 @@ test('audio comes before writing when a work includes both', async ({ page }) =>
   expect(contentOrder).toEqual(['audio', 'writing']);
 });
 
+test('work author links fade to red on hover', async ({ page }) => {
+  await page.goto('works/the-light-we-leave/');
+
+  const author = page.locator('.work-author a').first();
+  await expect(author).toHaveCSS('color', 'rgb(21, 21, 21)');
+
+  await author.hover();
+
+  await expect(author).toHaveCSS('color', 'rgb(123, 31, 37)');
+  await expect(author).toHaveCSS('transition-duration', '0.2s');
+});
+
 test('work pages link to every other work by the author', async ({ page }) => {
   await page.goto('works/the-light-we-leave/');
 
