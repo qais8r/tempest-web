@@ -1,6 +1,7 @@
 ---
 import Site from '../../layouts/Site.astro';
 import WorkCard from '../../components/WorkCard.astro';
+import Icon from '../../components/Icon.astro';
 import { authors, works, prose, initials, url, imageSrcset } from '../../lib/content';
 export function getStaticPaths() {
   return authors.map((author) => ({ params: { slug: author.slug }, props: { author } }));
@@ -15,7 +16,7 @@ const list = works.filter((w) => w.authors.includes(author.slug));
       class="breadcrumb"
       href={url('/authors/')}
       data-author-transition-context="profile"
-      data-author-transition-parts="portrait name">← All authors</a
+      data-author-transition-parts="portrait name"><Icon name="arrow" size={15} /> All authors</a
     ><section class="author-profile">
       <div
         class="author-portrait"

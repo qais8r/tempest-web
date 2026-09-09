@@ -38,6 +38,20 @@ test('work author links fade to red on hover', async ({ page }) => {
   await expect(author).toHaveCSS('transition-duration', '0.2s');
 });
 
+test('back links use a left-facing arrow that moves left', async ({ page }) => {
+  await page.goto('works/the-light-we-leave/');
+
+  const link = page.locator('.breadcrumb');
+  const arrow = link.locator('svg');
+  await expect(arrow).toHaveCount(1);
+  const restingTransform = await arrow.evaluate((element) => getComputedStyle(element).transform);
+
+  await link.hover();
+
+  await expect(arrow).not.toHaveCSS('transform', restingTransform);
+  await expect(arrow).toHaveCSS('transition-duration', '0.2s');
+});
+
 test('work pages link to every other work by the author', async ({ page }) => {
   await page.goto('works/the-light-we-leave/');
 

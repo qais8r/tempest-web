@@ -2,6 +2,7 @@
 import Site from '../../../layouts/Site.astro';
 import IssueFeature from '../../../components/IssueFeature.astro';
 import CompanionWorks from '../../../components/CompanionWorks.astro';
+import Icon from '../../../components/Icon.astro';
 import { issues, url } from '../../../lib/content';
 export function getStaticPaths() {
   return issues.map((issue) => ({ params: { year: issue.year }, props: { issue } }));
@@ -11,7 +12,7 @@ const { issue } = Astro.props;
 
 <Site title={`${issue.year} Issue`}
   ><main id="main" class="site-main">
-    <a class="breadcrumb" href={url('/issues/')}>← All issues</a><IssueFeature
+    <a class="breadcrumb" href={url('/issues/')}><Icon name="arrow" size={15} /> All issues</a><IssueFeature
       issue={issue}
     /><CompanionWorks issue={issue} />
   </main></Site
