@@ -183,10 +183,10 @@
   position: relative;
   width: var(--reader-tab-width);
   height: var(--reader-tab-height);
-  padding: clamp(0.3rem, 0.35cqw, 0.4rem) clamp(0.4rem, 0.45cqw, 0.5rem);
+  padding: 0 clamp(0.5rem, 0.55cqw, 0.6rem);
   display: flex;
   align-items: center;
-  background: #a95f59;
+  background: linear-gradient(90deg, #b56861 0%, #a95f59 58%, #884944 100%);
   color: #fffaf1;
   border: 0;
   text-decoration: none;
@@ -209,18 +209,21 @@
   clip-path: polygon(0 0, 100% 0, 100% var(--reader-tab-height), 0 100%);
 }
 .reader-work-marker--left .reader-work-tab {
-  border-radius: 0.25rem 0 0 0.25rem;
+  padding-right: clamp(0.25rem, 0.3cqw, 0.35rem);
+  border-radius: 999px 0 0 999px;
 }
 .reader-work-marker--right .reader-work-tab,
 .reader-work-marker--inside .reader-work-tab {
-  border-radius: 0 0.25rem 0.25rem 0;
+  padding-left: clamp(0.25rem, 0.3cqw, 0.35rem);
+  background: linear-gradient(90deg, #884944 0%, #a95f59 42%, #b56861 100%);
+  border-radius: 0 999px 999px 0;
 }
 .reader-work-tab-title {
   display: block;
   min-width: 0;
   width: 100%;
   overflow: hidden;
-  font: 500 clamp(0.56rem, 0.65cqw, 0.62rem) / 1.1 var(--sans);
+  font: 500 clamp(0.56rem, 0.65cqw, 0.62rem) / 1.35 var(--sans);
   letter-spacing: 0.02em;
   text-overflow: ellipsis;
   white-space: nowrap;
