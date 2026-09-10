@@ -40,20 +40,22 @@ const artwork = work.artworks[0];
     </div>
     {
       artwork && (
-        <img
-          class="work-thumb"
-          src={url(artwork.thumbnailSources?.[0].src || artwork.image)}
-          srcset={imageSrcset(artwork.thumbnailSources)}
-          sizes={
-            layout === 'column'
-              ? '(max-width: 480px) calc(100vw - 2rem), (max-width: 720px) 40vw, (max-width: 900px) calc((100vw - 5.2rem) / 2), (max-width: 1180px) calc((100vw - 7.4rem) / 3), calc((100vw - 12.6rem) / 4)'
-              : '(max-width: 720px) 7.2rem, (max-width: 1180px) 6.5rem, 8rem'
-          }
-          width="128"
-          height="128"
-          alt=""
-          loading="lazy"
-        />
+        <div class="work-thumb-frame">
+          <img
+            class="work-thumb"
+            src={url(artwork.thumbnailSources?.[0].src || artwork.image)}
+            srcset={imageSrcset(artwork.thumbnailSources)}
+            sizes={
+              layout === 'column'
+                ? '(max-width: 480px) calc(100vw - 2rem), (max-width: 720px) 40vw, (max-width: 900px) calc((100vw - 5.2rem) / 2), (max-width: 1180px) calc((100vw - 7.4rem) / 3), calc((100vw - 12.6rem) / 4)'
+                : '(max-width: 720px) 7.2rem, (max-width: 1180px) 6.5rem, 8rem'
+            }
+            width="128"
+            height="128"
+            alt=""
+            loading="lazy"
+          />
+        </div>
       )
     }
   </a>

@@ -329,17 +329,31 @@ button,
   font: italic 1.02rem/1.2 var(--serif);
   margin: 0;
 }
-.work-thumb {
+.work-thumb-frame {
+  position: relative;
   width: 8rem;
-  height: auto;
   aspect-ratio: 1;
+  overflow: hidden;
+}
+.work-thumb-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(21, 21, 21, 0.15);
+  pointer-events: none;
+}
+.work-thumb {
+  display: block;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   filter: grayscale(1);
-  border: 1px solid rgba(21, 21, 21, 0.15);
-  transition: filter 0.3s;
+  transition: 0.5s ease;
+  transition-property: filter, transform;
 }
-.work-card-link:hover .work-thumb {
+.work-card-link:is(:hover, :focus-visible) .work-thumb {
   filter: grayscale(0.2);
+  transform: scale(1.015);
 }
 .audio-hint {
   display: flex;
@@ -635,7 +649,7 @@ button,
 .issue-works .work-card-column .work-card-link.has-artwork .work-card-copy {
   grid-area: copy;
 }
-.issue-works .work-card-column .work-thumb {
+.issue-works .work-card-column .work-thumb-frame {
   grid-area: artwork;
   width: 100%;
   aspect-ratio: 16 / 10;
@@ -994,7 +1008,7 @@ button,
   .work-card-link.has-artwork {
     grid-template-columns: minmax(0, 1fr) 6.5rem;
   }
-  .work-thumb {
+  .work-thumb-frame {
     width: 6.5rem;
   }
   .archive-grid {
@@ -1084,7 +1098,7 @@ button,
   .work-card-link.has-artwork {
     grid-template-columns: minmax(0, 1fr) 7.2rem;
   }
-  .work-thumb {
+  .work-thumb-frame {
     width: 7.2rem;
   }
   .editorial-divider {
@@ -1201,7 +1215,7 @@ button,
   }
 }
 @media (min-width: 481px) and (max-width: 720px) {
-  .issue-works .work-card-column .work-thumb {
+  .issue-works .work-card-column .work-thumb-frame {
     aspect-ratio: 1;
   }
 }
