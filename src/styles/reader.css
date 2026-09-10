@@ -152,7 +152,141 @@
 .book-frame {
   position: relative;
   flex-shrink: 0;
-  filter: drop-shadow(0 1.5rem 1rem #0008);
+  container-type: inline-size;
+}
+.reader-work-markers {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+}
+.reader-work-marker {
+  --reader-tab-width: clamp(3.2rem, 3.8cqw, 3.8rem);
+  --reader-tab-height: clamp(1.7rem, 2cqw, 1.9rem);
+  position: absolute;
+  top: 15%;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-family: var(--sans);
+  pointer-events: auto;
+}
+.reader-work-marker--left {
+  left: calc(0px - var(--reader-tab-width));
+}
+.reader-work-marker--right {
+  right: calc(0px - var(--reader-tab-width));
+}
+.reader-work-tab {
+  box-sizing: border-box;
+  position: relative;
+  width: var(--reader-tab-width);
+  height: var(--reader-tab-height);
+  padding: clamp(0.3rem, 0.35cqw, 0.4rem) clamp(0.4rem, 0.45cqw, 0.5rem);
+  display: flex;
+  align-items: center;
+  background: #a95f59;
+  color: #fffaf1;
+  border: 0;
+  text-decoration: none;
+  cursor: pointer;
+}
+.reader-work-tab::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 0.65rem;
+  height: calc(var(--reader-tab-height) + 3rem);
+}
+.reader-work-marker--left .reader-work-tab::after {
+  left: 100%;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 var(--reader-tab-height));
+}
+.reader-work-marker--right .reader-work-tab::after,
+.reader-work-marker--inside .reader-work-tab::after {
+  right: 100%;
+  clip-path: polygon(0 0, 100% 0, 100% var(--reader-tab-height), 0 100%);
+}
+.reader-work-marker--left .reader-work-tab {
+  border-radius: 0.25rem 0 0 0.25rem;
+}
+.reader-work-marker--right .reader-work-tab,
+.reader-work-marker--inside .reader-work-tab {
+  border-radius: 0 0.25rem 0.25rem 0;
+}
+.reader-work-tab-title {
+  display: block;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+  font: 500 clamp(0.56rem, 0.65cqw, 0.62rem) / 1.1 var(--sans);
+  letter-spacing: 0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.reader-work-tab-copy {
+  position: absolute;
+  width: min(18rem, 42vw);
+  padding: 0.9rem 3.2rem 0.9rem 1rem;
+  background: #242522;
+  color: #e9e4d8;
+  border: 1px solid #ffffff24;
+  border-radius: 0.3rem;
+  box-shadow: 0 0.3rem 0.75rem #0003;
+  text-align: left;
+}
+.reader-work-marker--right .reader-work-tab-copy,
+.reader-work-marker--inside .reader-work-tab-copy {
+  top: 0;
+  right: calc(100% + 0.55rem);
+}
+.reader-work-marker--left .reader-work-tab-copy {
+  top: 0;
+  left: calc(100% + 0.55rem);
+}
+.reader-work-tab-copy {
+  display: block;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(0.25rem);
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease,
+    visibility 0s linear 0.16s;
+}
+.reader-work-tab:hover .reader-work-tab-copy,
+.reader-work-tab:focus-visible .reader-work-tab-copy {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0s;
+}
+.reader-work-tab-copy strong,
+.reader-work-tab-copy small {
+  display: block;
+}
+.reader-work-tab-copy strong {
+  font: 500 1.1rem/1.15 var(--serif);
+}
+.reader-work-tab-copy small {
+  margin-top: 0.3rem;
+  color: #b9b2a3;
+  font: 400 0.56rem/1.35 var(--sans);
+  letter-spacing: 0.04em;
+}
+.reader-work-tab-arrow {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  transition: transform 0.2s;
+}
+.reader-work-tab-copy:hover .reader-work-tab-arrow {
+  transform: translate(3px, -50%);
+}
+#flip-book .reader-work-marker {
+  display: none;
 }
 #flip-book {
   position: absolute;
@@ -160,6 +294,7 @@
   top: 0;
   width: 100%;
   height: 100%;
+  filter: drop-shadow(0 1.5rem 1rem #0008);
 }
 .pdf-page {
   background: #f4f0e6;
@@ -363,6 +498,20 @@
 }
 .continuous-pages .pdf-page {
   flex-shrink: 0;
+}
+.continuous-pages .reader-work-marker--inside {
+  --reader-tab-width: clamp(3.4rem, 14vw, 4rem);
+  --reader-tab-height: 2.125rem;
+  top: clamp(2.25rem, 5cqw, 3.25rem);
+  right: 0;
+  gap: 0.3rem;
+}
+.continuous-pages .reader-work-marker--inside .reader-work-tab {
+  padding: 0.5rem 0.55rem;
+  border-radius: 0.25rem 0 0 0.25rem;
+}
+.continuous-pages .reader-work-tab-copy {
+  width: min(17rem, calc(100vw - 5.5rem));
 }
 
 .reader-body [hidden] {
@@ -585,4 +734,10 @@
 }
 .pdf-page.--right:after {
   background: linear-gradient(90deg, #00000018, transparent 5%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reader-work-tab-copy,
+  .reader-work-tab-arrow {
+    transition: none;
+  }
 }

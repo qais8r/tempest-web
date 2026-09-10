@@ -1,7 +1,7 @@
 ---
 import Site from '../../../layouts/Site.astro';
 import Icon from '../../../components/Icon.astro';
-import { issues, worksFor, issueUrl, url } from '../../../lib/content';
+import { issues, worksFor, issueUrl, url, authorNames } from '../../../lib/content';
 import '../../../styles/reader.css';
 export function getStaticPaths() {
   return issues.map((issue) => ({ params: { year: issue.year }, props: { issue } }));
@@ -9,6 +9,13 @@ export function getStaticPaths() {
 const { issue } = Astro.props;
 const linkedWorks = worksFor(issue).filter((w) => w.pdfPage);
 const categories = [...new Set(linkedWorks.map((w) => w.category))];
+const readerWorks = linkedWorks.map((work) => ({
+  title: work.title,
+  authors: authorNames(work),
+  category: work.category,
+  page: work.pdfPage,
+  href: url(`/works/${work.slug}/`),
+}));
 ---
 
 <Site title={`${issue.year} Issue Reader`} reader>
@@ -33,6 +40,7 @@ const categories = [...new Set(linkedWorks.map((w) => w.category))];
     data-ratio={issue.pageRatio}
     data-assets={url('/pdf-assets/')}
     data-year={issue.year}
+    data-works={JSON.stringify(readerWorks)}
   >
     <aside class="reader-contents" id="reader-contents" aria-label="Issue contents" hidden>
       <div class="contents-heading">
@@ -89,10 +97,16 @@ const categories = [...new Set(linkedWorks.map((w) => w.category))];
       <div class="desktop-reader" id="desktop-reader" hidden>
         <button class="page-arrow previous-page" aria-label="Previous pages" disabled
           ><Icon name="left" size={30} /></button
-        ><div class="book-frame" id="book-frame"><div id="flip-book"></div></div><button
-          class="page-arrow next-page"
-          aria-label="Next pages"
-          disabled><Icon name="right" size={30} /></button
+        ><div class="book-frame" id="book-frame">
+          <div id="flip-book"></div>
+          <div
+            class="reader-work-markers"
+            id="reader-work-markers"
+            aria-label="Works on the visible pages"
+          >
+          </div>
+        </div><button class="page-arrow next-page" aria-label="Next pages" disabled
+          ><Icon name="right" size={30} /></button
         >
       </div>
       <div

@@ -130,3 +130,186 @@ test('real PDF navigation, continuous view, and resizing keep the selected page 
   await expect(page.locator('.page-retry')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
+
+test('work bookmarks link visible PDF pages to their companion works', async ({ page }) => {
+  await page.goto('issues/2026/reader/?page=8');
+  await expect(page.locator('#page-range')).toBeEnabled({ timeout: 30000 });
+
+  const leftPage = page.locator('.reader-work-markers .reader-work-marker--left');
+  await expect(leftPage.locator('.reader-work-tab')).toHaveCount(2);
+  await expect(leftPage.locator('a[href$="/night-rounds/"]')).toHaveAttribute(
+    'aria-label',
+    'Read Night rounds by Alex Morgan',
+  );
+  await expect(leftPage.locator('a[href$="/pulse/"]')).toHaveAttribute(
+    'aria-label',
+    'Read Pulse by Riley Chen',
+  );
+  await expect(leftPage.locator('.reader-work-tab-title')).toHaveText(['Night rounds', 'Pulse']);
+  const tabLayout = await leftPage
+    .locator('.reader-work-tab')
+    .first()
+    .evaluate((tab) => {
+      const style = getComputedStyle(tab);
+      const title = tab.querySelector('.reader-work-tab-title').getBoundingClientRect();
+      const bounds = tab.getBoundingClientRect();
+      const marker = tab.closest('.reader-work-marker').getBoundingClientRect();
+      const frame = document.querySelector('#book-frame').getBoundingClientRect();
+      return {
+        width: bounds.width,
+        height: bounds.height,
+        topRatio: (marker.top - frame.top) / frame.height,
+        titleInside: title.left >= bounds.left && title.right <= bounds.right,
+        shadow: style.boxShadow,
+        outerRadius: Number.parseFloat(style.borderTopLeftRadius),
+        innerRadius: Number.parseFloat(style.borderTopRightRadius),
+      };
+    });
+  expect(tabLayout.width).toBeLessThan(60);
+  expect(tabLayout.height).toBeGreaterThan(26);
+  expect(tabLayout.topRatio).toBeCloseTo(0.15, 2);
+  expect(tabLayout.titleInside).toBe(true);
+  expect(tabLayout.shadow).toBe('none');
+  expect(tabLayout.outerRadius).toBeGreaterThan(0);
+  expect(tabLayout.innerRadius).toBe(0);
+  const cardTheme = await leftPage
+    .locator('.reader-work-tab-copy')
+    .first()
+    .evaluate((card) => {
+      const style = getComputedStyle(card);
+      return {
+        background: style.backgroundColor,
+        color: style.color,
+        leftBorder: `${style.borderLeftWidth} ${style.borderLeftColor}`,
+        rightBorder: `${style.borderRightWidth} ${style.borderRightColor}`,
+        shadow: style.boxShadow,
+      };
+    });
+  expect(cardTheme.background).toBe('rgb(36, 37, 34)');
+  expect(cardTheme.color).toBe('rgb(233, 228, 216)');
+  expect(cardTheme.leftBorder).toBe(cardTheme.rightBorder);
+  expect(cardTheme.shadow).toContain('rgba(0, 0, 0, 0.2)');
+  const firstTab = leftPage.locator('.reader-work-tab').first();
+  const hoverCard = firstTab.locator('.reader-work-tab-copy');
+  const cardType = await hoverCard.evaluate((card) => ({
+    title: Number.parseFloat(getComputedStyle(card.querySelector('strong')).fontSize),
+    details: Number.parseFloat(getComputedStyle(card.querySelector('small')).fontSize),
+  }));
+  expect(cardType.title).toBeGreaterThan(17);
+  expect(cardType.details).toBeGreaterThan(8.5);
+  const arrow = hoverCard.locator('.reader-work-tab-arrow');
+  await expect(arrow).toHaveCount(1);
+  const arrowBefore = await arrow.evaluate((icon) => icon.getBoundingClientRect().x);
+  await firstTab.hover();
+  await expect(hoverCard).toBeVisible();
+  await expect
+    .poll(() =>
+      arrow.evaluate((icon, initialX) => icon.getBoundingClientRect().x - initialX, arrowBefore),
+    )
+    .toBeCloseTo(0, 0);
+  const safeZone = await firstTab.evaluate((tab) => {
+    const tabBounds = tab.getBoundingClientRect();
+    const cardBounds = tab.querySelector('.reader-work-tab-copy').getBoundingClientRect();
+    return {
+      x: (tabBounds.right + cardBounds.left) / 2,
+      y: tabBounds.top + tabBounds.height / 2,
+    };
+  });
+  await page.mouse.move(safeZone.x, safeZone.y, { steps: 8 });
+  await page.waitForTimeout(250);
+  await expect(hoverCard).toBeVisible();
+  await expect
+    .poll(() =>
+      arrow.evaluate((icon, initialX) => icon.getBoundingClientRect().x - initialX, arrowBefore),
+    )
+    .toBeCloseTo(0, 0);
+  await hoverCard.hover();
+  await expect
+    .poll(() =>
+      arrow.evaluate((icon, initialX) => icon.getBoundingClientRect().x - initialX, arrowBefore),
+    )
+    .toBeCloseTo(3, 0);
+  await page.evaluate(() => {
+    window.readerMarkerMoveCount = 0;
+    window.addEventListener('mousemove', () => window.readerMarkerMoveCount++);
+  });
+  await firstTab.hover();
+  await page.evaluate(() => (window.readerMarkerMoveCount = 0));
+  await hoverCard.hover();
+  expect(await page.evaluate(() => window.readerMarkerMoveCount)).toBe(0);
+
+  await page.setViewportSize({ width: 1800, height: 1200 });
+  await expect
+    .poll(() =>
+      leftPage
+        .locator('.reader-work-tab')
+        .first()
+        .evaluate((tab) => tab.clientWidth),
+    )
+    .toBeGreaterThan(tabLayout.width);
+  const wideTabWidth = await leftPage
+    .locator('.reader-work-tab')
+    .first()
+    .evaluate((tab) => tab.getBoundingClientRect().width);
+  expect(wideTabWidth).toBeLessThanOrEqual(64);
+
+  const single = page.locator('.reader-work-markers .reader-work-marker--right');
+  await expect(single.locator('a[href$="/between-shifts/"]')).toHaveAttribute(
+    'aria-label',
+    'Read Between shifts by Jordan Kim',
+  );
+
+  await page.locator('#view-toggle').click();
+  const zoomMarker = page.locator(
+    '#continuous-pages .pdf-page[data-page="8"] .reader-work-marker--inside',
+  );
+  await expect(zoomMarker).toBeVisible();
+  await expect(zoomMarker.locator('.reader-work-tab')).toHaveCount(2);
+  const insetLayout = await zoomMarker
+    .locator('.reader-work-tab')
+    .first()
+    .evaluate((tab) => {
+      const pageBounds = tab.closest('.pdf-page').getBoundingClientRect();
+      const tabBounds = tab.getBoundingClientRect();
+      const style = getComputedStyle(tab);
+      return {
+        rightGap: pageBounds.right - tabBounds.right,
+        height: tabBounds.height,
+        leftRadius: Number.parseFloat(style.borderTopLeftRadius),
+        rightRadius: Number.parseFloat(style.borderTopRightRadius),
+      };
+    });
+  expect(insetLayout.rightGap).toBeCloseTo(0, 0);
+  expect(insetLayout.height).toBeGreaterThanOrEqual(32);
+  expect(insetLayout.height).toBeLessThanOrEqual(36);
+  expect(insetLayout.leftRadius).toBeGreaterThan(0);
+  expect(insetLayout.rightRadius).toBe(0);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mobileMarker = page.locator(
+    '#continuous-pages .pdf-page[data-page="8"] .reader-work-marker--inside',
+  );
+  await expect(mobileMarker).toBeVisible();
+  await expect(mobileMarker.locator('.reader-work-tab')).toHaveCount(2);
+  const mobileInset = await mobileMarker
+    .locator('.reader-work-tab')
+    .first()
+    .evaluate((tab) => {
+      const pageBounds = tab.closest('.pdf-page').getBoundingClientRect();
+      const tabBounds = tab.getBoundingClientRect();
+      return {
+        rightGap: pageBounds.right - tabBounds.right,
+        topGap: tabBounds.top - pageBounds.top,
+      };
+    });
+  expect(mobileInset.rightGap).toBeCloseTo(0, 0);
+  expect(mobileInset.topGap).toBeGreaterThanOrEqual(32);
+
+  await jump(page, [20]);
+  await expect(page.locator('#continuous-pages .pdf-page[data-page="20"] canvas')).toHaveCount(1);
+  await expect(mobileMarker.locator('.reader-work-tab')).toHaveCount(2);
+  await jump(page, [8]);
+  await expect(page.locator('#continuous-pages .pdf-page[data-page="8"] canvas')).toHaveCount(1);
+  await expect(mobileMarker).toBeVisible();
+  await expect(mobileMarker.locator('.reader-work-tab')).toHaveCount(2);
+});

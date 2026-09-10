@@ -3,6 +3,14 @@ import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { PageFlip } from 'page-flip/dist/js/page-flip.module.js';
 GlobalWorkerOptions.workerSrc = workerUrl;
 
+interface ReaderWork {
+  title: string;
+  authors: string;
+  category: string;
+  page: number;
+  href: string;
+}
+
 const shell = document.querySelector<HTMLElement>('[data-reader]');
 if (shell) setupReader(shell);
 
@@ -12,7 +20,8 @@ function setupReader(shell: HTMLElement) {
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const desktop = el('desktop-reader'),
     continuous = el('continuous-pages'),
-    frame = el('book-frame');
+    frame = el('book-frame'),
+    desktopMarkers = el('reader-work-markers');
   const loading = el('reader-loading'),
     error = el('reader-error');
   const progress = el<HTMLInputElement>('page-range'),
@@ -39,6 +48,87 @@ function setupReader(shell: HTMLElement) {
   let pageNodes: HTMLElement[] = [];
   const inflight = new Map<HTMLElement, Promise<void>>();
   const rendered = new Map<HTMLElement, number>();
+  const linkedWorks = JSON.parse(shell.dataset.works || '[]') as ReaderWork[];
+  const worksByPage = new Map<number, ReaderWork[]>();
+  for (const work of linkedWorks) {
+    const pageWorks = worksByPage.get(work.page) || [];
+    pageWorks.push(work);
+    worksByPage.set(work.page, pageWorks);
+  }
+
+  function workSummary(work: ReaderWork) {
+    const copy = document.createElement('span');
+    copy.className = 'reader-work-tab-copy';
+    const title = document.createElement('strong');
+    title.textContent = work.title;
+    const details = document.createElement('small');
+    details.textContent = `${work.category} · ${work.authors}`;
+    const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    arrow.classList.add('reader-work-tab-arrow');
+    arrow.setAttribute('width', '18');
+    arrow.setAttribute('height', '18');
+    arrow.setAttribute('viewBox', '0 0 24 24');
+    arrow.setAttribute('fill', 'none');
+    arrow.setAttribute('stroke', 'currentColor');
+    arrow.setAttribute('stroke-width', '1.25');
+    arrow.setAttribute('stroke-linecap', 'round');
+    arrow.setAttribute('stroke-linejoin', 'round');
+    arrow.setAttribute('aria-hidden', 'true');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M4 12h16m-6-6 6 6-6 6');
+    arrow.append(path);
+    copy.append(title, details, arrow);
+    return copy;
+  }
+
+  function workMarker(page: number, side: 'left' | 'right' | 'inside') {
+    const pageWorks = worksByPage.get(page);
+    if (!pageWorks?.length) return null;
+    const marker = document.createElement('div');
+    marker.className = `reader-work-marker reader-work-marker--${side}`;
+    marker.setAttribute('aria-label', `Works on page ${page}`);
+    marker.addEventListener('mouseenter', () => flip?.userMove({ x: -1, y: -1 }, false));
+    marker.addEventListener('mousemove', (event) => event.stopPropagation());
+    for (const work of pageWorks) {
+      const link = document.createElement('a');
+      link.className = 'reader-work-tab';
+      link.href = work.href;
+      link.setAttribute('aria-label', `Read ${work.title} by ${work.authors}`);
+      const title = document.createElement('span');
+      title.className = 'reader-work-tab-title';
+      title.textContent = work.title;
+      title.setAttribute('aria-hidden', 'true');
+      link.append(title, workSummary(work));
+      marker.append(link);
+    }
+    return marker;
+  }
+
+  function preserveWorkMarker(node: HTMLElement, ...children: HTMLElement[]) {
+    const marker = Array.from(node.children).find((child) =>
+      child.classList.contains('reader-work-marker'),
+    );
+    node.replaceChildren(...children);
+    if (marker) node.append(marker);
+  }
+
+  function refreshDesktopMarkers() {
+    desktopMarkers.replaceChildren();
+    if (isContinuous()) return;
+    const visible: { page: number; side: 'left' | 'right' }[] =
+      current === 1
+        ? [{ page: 1, side: 'right' }]
+        : current === pageCount && pageCount % 2 === 0
+          ? [{ page: current, side: 'left' }]
+          : [
+              { page: current, side: 'left' },
+              { page: current + 1, side: 'right' },
+            ];
+    for (const { page, side } of visible) {
+      const marker = workMarker(page, side);
+      if (marker) desktopMarkers.append(marker);
+    }
+  }
 
   function pageElement(page: number) {
     const node = document.createElement('div');
@@ -51,6 +141,8 @@ function setupReader(shell: HTMLElement) {
     wait.className = 'page-placeholder';
     wait.textContent = `Page ${page}`;
     node.append(wait);
+    const marker = workMarker(page, 'inside');
+    if (marker) node.append(marker);
     return node;
   }
 
@@ -102,7 +194,7 @@ function setupReader(shell: HTMLElement) {
         content.style.width = `${viewport.width}px`;
         content.style.height = `${viewport.height}px`;
         content.append(canvas, text);
-        node.replaceChildren(content);
+        preserveWorkMarker(node, content);
         if (isContinuous()) {
           node.style.width = `${viewport.width}px`;
           node.style.height = `${viewport.height}px`;
@@ -120,13 +212,13 @@ function setupReader(shell: HTMLElement) {
         else {
           canvas.width = 1;
           canvas.height = 1;
-          node.replaceChildren();
+          preserveWorkMarker(node);
         }
       })
       .catch((e) => {
         if (!valid()) return;
         console.error('PDF page rendering failed', e);
-        node.replaceChildren();
+        preserveWorkMarker(node);
         const retry = document.createElement('button');
         retry.className = 'page-retry';
         retry.textContent = `Retry page ${number}`;
@@ -134,7 +226,7 @@ function setupReader(shell: HTMLElement) {
           event.stopPropagation();
           void renderPage(node, number, width, true);
         });
-        node.append(retry);
+        node.prepend(retry);
       })
       .finally(() => inflight.delete(node));
     queue = task;
@@ -149,7 +241,7 @@ function setupReader(shell: HTMLElement) {
           c.width = 1;
           c.height = 1;
         });
-        node.replaceChildren();
+        preserveWorkMarker(node);
         rendered.delete(node);
       }
   }
@@ -188,6 +280,7 @@ function setupReader(shell: HTMLElement) {
         else node.removeAttribute('aria-current');
       }
     });
+    refreshDesktopMarkers();
     if (!isContinuous()) void showNearby();
     else discardDistantPages();
   }
@@ -210,6 +303,7 @@ function setupReader(shell: HTMLElement) {
     observer?.disconnect();
     flip?.destroy();
     flip = null;
+    desktopMarkers.replaceChildren();
     rendered.clear();
     continuous.replaceChildren();
     frame.replaceChildren();
@@ -251,7 +345,7 @@ function setupReader(shell: HTMLElement) {
       const book = document.createElement('div');
       book.id = 'flip-book';
       book.append(...pageNodes);
-      frame.replaceChildren(book);
+      frame.replaceChildren(book, desktopMarkers);
       fitBook();
       flip = new PageFlip(book, {
         width: 560,

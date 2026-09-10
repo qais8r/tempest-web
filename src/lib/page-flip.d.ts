@@ -7,6 +7,7 @@ declare module 'page-flip/dist/js/page-flip.module.js' {
     flipNext(): void;
     flipPrev(): void;
     getCurrentPageIndex(): number;
+    userMove(position: { x: number; y: number }, isTouch: boolean): void;
     update(): void;
     destroy(): void;
   }
