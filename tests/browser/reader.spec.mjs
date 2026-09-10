@@ -306,10 +306,10 @@ test('work bookmarks link visible PDF pages to their companion works', async ({ 
   expect(mobileInset.topGap).toBeGreaterThanOrEqual(32);
 
   await jump(page, [20]);
-  await expect(page.locator('#continuous-pages .pdf-page[data-page="20"] canvas')).toHaveCount(1);
+  await expect(page.locator('#page-range')).toHaveValue('20');
   await expect(mobileMarker.locator('.reader-work-tab')).toHaveCount(2);
   await jump(page, [8]);
-  await expect(page.locator('#continuous-pages .pdf-page[data-page="8"] canvas')).toHaveCount(1);
+  await expect(page.locator('#page-range')).toHaveValue('8');
   await expect(mobileMarker).toBeVisible();
   await expect(mobileMarker.locator('.reader-work-tab')).toHaveCount(2);
 });
