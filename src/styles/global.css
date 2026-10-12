@@ -7,7 +7,7 @@
   --line: rgba(21, 21, 21, 0.48);
   --serif: 'Cormorant Garamond', Georgia, serif;
   --sans: 'Manrope', Arial, sans-serif;
-  --page: calc(100vw - 6rem);
+  --page: min(90rem, calc(100vw - 6rem));
 }
 * {
   box-sizing: border-box;
