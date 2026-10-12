@@ -339,8 +339,9 @@ function setupReader(shell: HTMLElement) {
       pageNodes.forEach((node) => observer!.observe(node));
       await renderPage(pageNodes[target - 1], target, pageWidth);
       if (version !== generation) return;
-      scrollToPage(target);
-      current = target;
+      // A contents/range jump can arrive while the first resized page renders.
+      // Do not move the reader back to the mount's older selection.
+      if (current === target) scrollToPage(target);
     } else {
       const book = document.createElement('div');
       book.id = 'flip-book';
@@ -410,6 +411,10 @@ function setupReader(shell: HTMLElement) {
     try {
       const task = getDocument({
         url: shell.dataset.pdf!,
+        // Fetch only the chunks needed by the nearby-page render queue. Streaming
+        // must also be disabled for PDF.js to honor disableAutoFetch.
+        disableAutoFetch: true,
+        disableStream: true,
         cMapUrl: `${shell.dataset.assets}cmaps/`,
         cMapPacked: true,
         standardFontDataUrl: `${shell.dataset.assets}standard_fonts/`,

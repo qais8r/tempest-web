@@ -1,5 +1,27 @@
 import { test, expect } from '@playwright/test';
 
+test('a high-density mobile cover avoids the jump from 640 to 1050px', async ({
+  browser,
+  baseURL,
+}) => {
+  const context = await browser.newContext({
+    baseURL,
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 2,
+  });
+  const page = await context.newPage();
+  try {
+    await page.goto('issues/2026/');
+    const image = page.locator('.hero-image');
+    await expect
+      .poll(() => image.evaluate((img) => img.complete && img.naturalWidth > 0))
+      .toBe(true);
+    expect(await image.evaluate((img) => img.currentSrc)).toMatch(/\/2026-800\.webp$/);
+  } finally {
+    await context.close();
+  }
+});
+
 for (const width of [390, 1280]) {
   test(`cards load sized images with the Pages prefix at ${width}px`, async ({ page, request }) => {
     await page.setViewportSize({ width, height: 900 });
@@ -41,12 +63,12 @@ for (const width of [390, 1280]) {
   });
 }
 
-test('artwork reserves its proportions before the original image loads', async ({ page }) => {
+test('artwork reserves its proportions before the display image loads', async ({ page }) => {
   let release;
   const pending = new Promise((resolve) => {
     release = resolve;
   });
-  await page.route('**/media/images/sample-light.jpg', async (route) => {
+  await page.route('**/media/artworks/*.webp', async (route) => {
     await pending;
     await route.continue();
   });
@@ -70,13 +92,49 @@ test('artwork reserves its proportions before the original image loads', async (
   );
 });
 
+for (const width of [390, 1024, 1440]) {
+  test(`artwork uses a responsive display copy and keeps its original at ${width}px`, async ({
+    page,
+    request,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('works/the-light-we-leave/');
+    const image = page.locator('.work-art img').first();
+    await image.scrollIntoViewIfNeeded();
+    await expect
+      .poll(() => image.evaluate((img) => img.complete && img.naturalWidth > 0))
+      .toBe(true);
+    const source = await image.evaluate((img) => ({
+      selected: img.currentSrc,
+      original: img.src,
+      width: img.naturalWidth,
+      display: img.clientWidth,
+    }));
+    expect(source.selected).toMatch(/\/tempest-web\/media\/artworks\/.+-\d+\.webp$/);
+    const encodedWidth = Number(source.selected.match(/-(\d+)\.webp$/)[1]);
+    expect(encodedWidth).toBeGreaterThanOrEqual(source.display);
+    const display = await request.get(source.selected);
+    const original = await request.get(source.original);
+    expect(display.ok()).toBe(true);
+    expect(original.ok()).toBe(true);
+    expect((await display.body()).length).toBeLessThan((await original.body()).length);
+  });
+}
+
+test('issue thumbnails follow the four-column layout between 900 and 1180px', async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await page.goto('issues/2026/');
+  const image = page.locator('.issue-works .work-thumb').first();
+  await image.scrollIntoViewIfNeeded();
+  await expect.poll(() => image.evaluate((img) => img.complete && img.naturalWidth > 0)).toBe(true);
+  expect(await image.evaluate((img) => img.currentSrc)).toMatch(/-256\.webp$/);
+});
+
 test('the About cover keeps its proportions at wide viewports', async ({ page }) => {
   await page.setViewportSize({ width: 2560, height: 1440 });
   await page.goto('about/');
   const cover = page.locator('.about-layout figure img');
-  await expect
-    .poll(() => cover.evaluate((img) => img.complete && img.naturalWidth > 0))
-    .toBe(true);
+  await expect.poll(() => cover.evaluate((img) => img.complete && img.naturalWidth > 0)).toBe(true);
   const size = await cover.evaluate((img) => {
     const rect = img.getBoundingClientRect();
     return {

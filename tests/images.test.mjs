@@ -4,7 +4,29 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
-import { imageVariants, portraitWidths } from '../scripts/images.mjs';
+import { imageVariants, portraitWidths, isAnimatedPng } from '../scripts/images.mjs';
+
+test('animation detection reads PNG chunks rather than incidental compressed bytes', () => {
+  const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+  const chunk = (type, data) => {
+    const bytes = Buffer.alloc(12 + data.length);
+    bytes.writeUInt32BE(data.length);
+    bytes.write(type, 4, 4, 'ascii');
+    data.copy(bytes, 8);
+    return bytes;
+  };
+  assert.equal(isAnimatedPng(Buffer.concat([signature, chunk('acTL', Buffer.alloc(8))])), true);
+  assert.equal(
+    isAnimatedPng(Buffer.concat([signature, chunk('IDAT', Buffer.from('acTL'))])),
+    false,
+  );
+  assert.equal(isAnimatedPng(Buffer.concat([signature, chunk('IDAT', Buffer.alloc(0))])), false);
+  assert.equal(isAnimatedPng(Buffer.from('not a PNG')), false);
+  assert.equal(
+    isAnimatedPng(Buffer.concat([signature, Buffer.from([255, 255, 255, 255]), Buffer.alloc(8)])),
+    false,
+  );
+});
 
 test('display copies preserve proportions, avoid upscaling, and crop thumbnails centrally', async (t) => {
   const dir = await mkdtemp(path.join(tmpdir(), 'tempest-images-'));

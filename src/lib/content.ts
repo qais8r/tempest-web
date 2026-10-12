@@ -41,6 +41,7 @@ export interface Work {
     caption: string;
     width?: number;
     height?: number;
+    sources?: ImageSource[];
     thumbnailSources?: ImageSource[];
   }[];
   recordings: { file: string; title: string; description: string }[];

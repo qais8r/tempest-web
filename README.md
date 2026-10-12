@@ -26,7 +26,7 @@ npm run preview           # Serve the most recent build locally
 
 Browser tests build the public `content/` fixtures in preview mode with `/tempest-web` as the base path, then serve them on port 4537. They cover shared elements, Back and Forward, reloads, mobile layouts, interrupted transitions, storage failures, missing navigation APIs, and reduced motion. Playwright stops its server after the run.
 
-The prepare script validates JSON, copies only media referenced by included records, generates PDF covers, and checks reader page numbers. It also generates WebP cover sizes and square thumbnails for JPEG and PNG artwork, keeping the originals. Run it again or restart the dev server after editing content. Cover images are cached by PDF hash and renderer configuration; CI restores the public fixture cache between runs. Generated files are ignored by Git.
+The prepare script validates JSON, copies only media referenced by included records, generates PDF covers, and checks reader page numbers. It also generates WebP cover sizes, proportional display copies, and square thumbnails for JPEG and PNG artwork, keeping the originals. Run it again or restart the dev server after editing content. Cover images are cached by PDF hash and renderer configuration; CI restores the public fixture cache between runs. Generated files are ignored by Git.
 
 ## Editing and publishing
 
@@ -72,6 +72,8 @@ PDFs, images, and MP3s are committed directly to GitHub. A 25 MiB per-file build
 
 Every HTML page opts into native cross-document View Transitions. Most navigation uses a page crossfade; work cards, author links, and issue covers share elements between pages. A single navigation record keeps the outgoing and incoming elements consistent. History records preserve the selected card or author teaser for Back and Forward. Reduced motion disables transitions, and blocked storage falls back to the page crossfade. External destinations and PDF files follow the browser's normal navigation behavior.
 
-Astro generates the pages. PDF.js renders and supplies selectable text for the PDF reader; StPageFlip handles desktop page turns. The reader loads nearby pages, releases distant canvases, supports keyboard navigation, contents links, zoom, downloads, and reduced motion. It switches to scrolling below 760px. Typography is self-hosted Cormorant Garamond and Manrope.
+Astro generates the pages. PDF.js renders and supplies selectable text for the PDF reader; StPageFlip handles desktop page turns. The reader fetches PDF byte ranges on demand, loads nearby pages, releases distant canvases, supports keyboard navigation, contents links, zoom, downloads, and reduced motion. Servers without range support fall back to the full PDF. It switches to scrolling below 760px. Typography is self-hosted Cormorant Garamond and Manrope.
+
+The build applies a checked lifecycle patch to the pinned StPageFlip 2.0.7 bundle so destroying a flipbook stops its animation loop and removes resize listeners, including under reduced motion. If upgrading StPageFlip changes that bundle, the build stops until the patch is reviewed. Browser regressions cover repeated mode switches and mobile resizing.
 
 `editorial/` contains the private workspace's CMS configuration and workflow templates. Run `node scripts/make-cms-config.mjs` after changing its field generator, then copy the updated configuration into the private workspace. Code changes should go through a pull request. Publication errors stop before deployment and preserve the last successful site.

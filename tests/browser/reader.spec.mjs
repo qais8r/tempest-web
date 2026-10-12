@@ -100,6 +100,94 @@ test('returning to an inflight page renders it after its obsolete request finish
   await expect(page.locator('#page-range')).toHaveValue('8');
 });
 
+test('a jump during a continuous-view mount keeps the newer selection', async ({ page }) => {
+  await controlledReader(page);
+  await page.evaluate(() => window.pdfTest.release());
+  await expect(page.locator('.pdf-page[data-page="8"] canvas')).toHaveCount(1);
+  await page.evaluate(() => {
+    window.pdfTest.renders = [];
+    window.pdfTest.hold = 8;
+  });
+  await page.locator('#view-toggle').click();
+  await expect.poll(() => page.evaluate(() => window.pdfTest.renders[0])).toBe(8);
+  await expect(page.locator('#view-toggle')).toBeDisabled();
+  await jump(page, [20]);
+  await page.evaluate(() => window.pdfTest.release());
+  await expect(page.locator('#view-toggle')).toBeEnabled();
+  await expect(page.locator('#page-range')).toHaveValue('20');
+  await expect(page.locator('#continuous-pages .pdf-page[data-page="20"] canvas')).toHaveCount(1);
+});
+
+test('the real reader fetches partial PDF data and can navigate to later pages', async ({
+  page,
+}) => {
+  const original = await readFile('content/media/pdfs/2018.pdf');
+  // Astro's local preview serves complete files; emulate the production host's
+  // byte-range responses so this exercises PDF.js's real partial-loading path.
+  await page.route('**/media/pdfs/2018.pdf', (route) => {
+    const range = route
+      .request()
+      .headers()
+      .range?.match(/^bytes=(\d+)-(\d*)$/);
+    if (!range)
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/pdf',
+        headers: { 'accept-ranges': 'bytes' },
+        body: original,
+      });
+    const start = Number(range[1]);
+    const end = Math.min(Number(range[2] || original.length - 1), original.length - 1);
+    return route.fulfill({
+      status: 206,
+      contentType: 'application/pdf',
+      headers: {
+        'accept-ranges': 'bytes',
+        'content-range': `bytes ${start}-${end}/${original.length}`,
+      },
+      body: original.subarray(start, end + 1),
+    });
+  });
+  const responses = [];
+  page.on('response', (response) => {
+    if (response.url().endsWith('/media/pdfs/2018.pdf') && response.status() === 206) {
+      responses.push(response);
+    }
+  });
+  await page.goto('issues/2018/reader/');
+  await expect(page.locator('#page-range')).toBeEnabled({ timeout: 30000 });
+  await expect(page.locator('.pdf-page[data-page="4"] canvas')).toHaveCount(1);
+  await page.waitForLoadState('networkidle');
+  expect(responses.length).toBeGreaterThan(0);
+  const loaded = (await Promise.all(responses.map((response) => response.body()))).reduce(
+    (sum, body) => sum + body.length,
+    0,
+  );
+  expect(loaded).toBeLessThan(original.length);
+  await jump(page, [20]);
+  await expect(page.locator('.pdf-page[data-page="20"] canvas')).toHaveCount(1);
+  await expect(page.locator('#reader-error')).toBeHidden();
+});
+
+test('the real reader also works when its server does not support byte ranges', async ({
+  page,
+}) => {
+  const body = await readFile('content/media/pdfs/2018.pdf');
+  await page.route('**/media/pdfs/2018.pdf', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/pdf',
+      body,
+    }),
+  );
+  await page.goto('issues/2018/reader/?page=8');
+  await expect(page.locator('#page-range')).toBeEnabled({ timeout: 30000 });
+  await expect(page.locator('.pdf-page[data-page="8"] canvas')).toHaveCount(1);
+  await jump(page, [20]);
+  await expect(page.locator('.pdf-page[data-page="20"] canvas')).toHaveCount(1);
+  await expect(page.locator('#reader-error')).toBeHidden();
+});
+
 test('real PDF navigation, continuous view, and resizing keep the selected page readable', async ({
   page,
 }) => {

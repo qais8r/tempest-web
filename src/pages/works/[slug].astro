@@ -72,6 +72,12 @@ const moreByAuthors = workAuthors
               <>
                 <img
                   src={url(art.image)}
+                  srcset={imageSrcset(art.sources)}
+                  sizes={
+                    art.sources
+                      ? 'auto, (max-width: 720px) calc(100vw - 2rem), min(60vw, 48rem)'
+                      : undefined
+                  }
                   alt={art.alt}
                   width={art.width}
                   height={art.height}

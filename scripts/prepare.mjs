@@ -3,7 +3,14 @@ import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { createCanvas, DOMMatrix, ImageData, Path2D, loadImage } from '@napi-rs/canvas';
 import { loadContent, referencedMedia, mediaPath } from './content.mjs';
-import { imageVariants, coverWidths, thumbnailWidths, portraitWidths } from './images.mjs';
+import {
+  imageVariants,
+  coverWidths,
+  thumbnailWidths,
+  portraitWidths,
+  artworkWidths,
+  isAnimatedPng,
+} from './images.mjs';
 
 globalThis.DOMMatrix ??= DOMMatrix;
 globalThis.ImageData ??= ImageData;
@@ -114,6 +121,7 @@ for (const issue of data.issues) {
 }
 // Only included works reach this step, so drafts cannot leave display copies behind.
 const thumbnails = new Map();
+const artworks = new Map();
 for (const work of data.works) {
   for (const [index, art] of work.artworks.entries()) {
     // Preserve vector and animated formats without flattening or rasterizing them.
@@ -121,9 +129,17 @@ for (const work of data.works) {
     const image = await loadImage(mediaPath(root, art.image));
     art.width = image.width;
     art.height = image.height;
+    const id = createHash('sha256').update(art.image).digest('hex').slice(0, 16);
+    const animated =
+      /\.png$/i.test(art.image) && isAnimatedPng(await readFile(mediaPath(root, art.image)));
+    if (!animated && !artworks.has(art.image)) {
+      await mkdir('public/media/artworks', { recursive: true });
+      const variants = await imageVariants(image, `public/media/artworks/${id}`, artworkWidths);
+      artworks.set(art.image, publicSources(variants));
+    }
+    if (!animated) art.sources = artworks.get(art.image);
     if (index !== 0) continue;
     if (!thumbnails.has(art.image)) {
-      const id = createHash('sha256').update(art.image).digest('hex').slice(0, 16);
       await mkdir('public/media/thumbnails', { recursive: true });
       const variants = await imageVariants(
         image,
