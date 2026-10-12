@@ -23,7 +23,12 @@ test('a high-density mobile cover avoids the jump from 640 to 1050px', async ({
 });
 
 for (const width of [390, 1280]) {
-  test(`cards load sized images with the Pages prefix at ${width}px`, async ({ page, request }) => {
+  test(`cards load sized images with the Pages prefix at ${width}px`, async ({
+    page,
+    request,
+    browser,
+    baseURL,
+  }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('issues/2026/');
     const hero = page.locator('.hero-image');
@@ -34,22 +39,30 @@ for (const width of [390, 1280]) {
       /\/tempest-web\/media\/covers\/2026-640\.webp$/,
     );
 
-    await page.goto('authors/riley-chen/');
-    const thumb = page.locator('a[href$="/the-light-we-leave/"] .work-thumb');
-    await thumb.scrollIntoViewIfNeeded();
-    await expect
-      .poll(() => thumb.evaluate((img) => img.complete && img.naturalWidth > 0))
-      .toBe(true);
-    const selected = await thumb.evaluate((img) => ({
-      src: img.currentSrc,
-      width: img.naturalWidth,
-      rendered: img.getBoundingClientRect().width,
-      height: img.getBoundingClientRect().height,
-    }));
-    expect(selected.src).toMatch(/\/tempest-web\/media\/thumbnails\/.+-128\.webp$/);
-    expect(selected.width).toBeLessThanOrEqual(128);
-    expect(selected.rendered).toBeCloseTo(selected.height, 1);
-    expect((await request.get(selected.src)).ok()).toBe(true);
+    // A browser may reuse the larger issue image from cache. Check compact
+    // selection with a cold cache so that optimization is tested independently.
+    const authorContext = await browser.newContext({ baseURL, viewport: { width, height: 900 } });
+    const authorPage = await authorContext.newPage();
+    try {
+      await authorPage.goto('authors/riley-chen/');
+      const thumb = authorPage.locator('a[href$="/the-light-we-leave/"] .work-thumb');
+      await thumb.scrollIntoViewIfNeeded();
+      await expect
+        .poll(() => thumb.evaluate((img) => img.complete && img.naturalWidth > 0))
+        .toBe(true);
+      const selected = await thumb.evaluate((img) => ({
+        src: img.currentSrc,
+        width: img.naturalWidth,
+        rendered: img.getBoundingClientRect().width,
+        height: img.getBoundingClientRect().height,
+      }));
+      expect(selected.src).toMatch(/\/tempest-web\/media\/thumbnails\/.+-128\.webp$/);
+      expect(selected.width).toBeLessThanOrEqual(128);
+      expect(selected.rendered).toBeCloseTo(selected.height, 1);
+      expect((await request.get(selected.src)).ok()).toBe(true);
+    } finally {
+      await authorContext.close();
+    }
 
     await page.goto('issues/');
     const cover = page.locator('.archive-cover img').first();
