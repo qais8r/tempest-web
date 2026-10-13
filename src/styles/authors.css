@@ -1,6 +1,81 @@
 .author-directory {
   padding: 5.5rem 0 7rem;
 }
+.author-directory-tools {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  justify-content: space-between;
+  width: min(34%, 26rem);
+  gap: 1.5rem;
+}
+.author-directory-tools .archive-count {
+  order: -1;
+  text-align: right;
+  line-height: 1.45;
+}
+.author-search {
+  margin: 0;
+}
+.author-search-field {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 3rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--line);
+  transition: border-color 0.2s ease;
+}
+.author-search-field:focus-within {
+  border-color: var(--red);
+}
+.author-search-field > svg {
+  flex-shrink: 0;
+}
+.author-search input {
+  min-width: 0;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font: 400 clamp(1.4rem, 2vw, 1.8rem) / 1.3 var(--serif);
+  appearance: none;
+}
+.author-search input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+.author-search input:focus-visible {
+  outline: none;
+}
+.author-search input::-webkit-search-cancel-button,
+.author-search input::-webkit-search-decoration {
+  appearance: none;
+}
+.author-search-clear {
+  display: grid;
+  place-items: center;
+  flex: 0 0 2.75rem;
+  height: 2.75rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.author-search-clear:is(:hover, :focus-visible) {
+  color: var(--red);
+}
+.author-search[hidden],
+.author-search-clear[hidden],
+.author-search-empty[hidden],
+.author-directory-grid[hidden],
+.author-directory-grid > [hidden] {
+  display: none;
+}
 .author-directory-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -78,6 +153,23 @@
 @media (max-width: 720px) {
   .author-directory {
     padding: 4rem 0;
+  }
+  .author-directory-heading {
+    flex-direction: column;
+    gap: 1.8rem;
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+  .author-directory-tools {
+    width: 100%;
+    gap: 0.9rem;
+  }
+  .author-directory-tools .archive-count {
+    order: 0;
+    margin-top: 0;
+  }
+  .author-search input {
+    font-size: 1.5rem;
   }
   .author-directory-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
