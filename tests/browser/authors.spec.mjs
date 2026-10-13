@@ -109,6 +109,38 @@ test('author search sits beside the desktop title and below it on mobile', async
   }
 });
 
+test('author search keeps its geometry when typing and clearing', async ({ page }) => {
+  for (const width of [1280, 768, 720, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('authors/');
+    const search = page.getByRole('searchbox', { name: 'Search authors' });
+    const clear = page.getByRole('button', { name: 'Clear search' });
+    await expect(search).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+
+    const geometry = () =>
+      page.locator('.author-search-field').evaluate((field) =>
+        [field, field.querySelector('input'), field.querySelector('svg')].map((element) => {
+          const { x, y, width, height } = element.getBoundingClientRect();
+          return { x, y, width, height };
+        }),
+      );
+    const empty = await geometry();
+    await search.fill('Chen');
+    await expect(clear).toBeVisible();
+    expect(await geometry()).toEqual(empty);
+    await clear.click();
+    await expect(clear).toBeHidden();
+    expect(await geometry()).toEqual(empty);
+    await search.fill('no-matching-author');
+    expect(await geometry()).toEqual(empty);
+    await search.press('Escape');
+    expect(await geometry()).toEqual(empty);
+    await search.press('Tab');
+    await expect(page.locator('.author-search-clear')).not.toBeFocused();
+  }
+});
+
 test.describe('author directory without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
 

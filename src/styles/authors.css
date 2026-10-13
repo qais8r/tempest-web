@@ -69,8 +69,10 @@
 .author-search-clear:is(:hover, :focus-visible) {
   color: var(--red);
 }
+.author-search-clear[hidden] {
+  visibility: hidden;
+}
 .author-search[hidden],
-.author-search-clear[hidden],
 .author-search-empty[hidden],
 .author-directory-grid[hidden],
 .author-directory-grid > [hidden] {
