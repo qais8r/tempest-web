@@ -89,7 +89,7 @@ a {
   align-items: center;
   gap: clamp(0.75rem, 2.2vw, 2.2rem);
   margin: 2rem 0.5rem 0 3rem;
-  font: 500 0.64rem/1 var(--sans);
+  font: 500 0.74rem/1 var(--sans);
   letter-spacing: 0.26em;
   text-transform: uppercase;
 }
