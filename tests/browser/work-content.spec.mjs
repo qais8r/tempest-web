@@ -1,5 +1,46 @@
 import { test, expect } from '@playwright/test';
 
+test('the desktop sidebar stays in view while the work scrolls', async ({ page }) => {
+  await page.goto('works/anatomy-of-quiet/');
+
+  const sidebar = page.locator('.work-margin');
+  const start = await sidebar.evaluate((element) => element.getBoundingClientRect().top);
+  await page.evaluate((top) => window.scrollTo({ top, behavior: 'instant' }), start);
+  const pinned = await sidebar.boundingBox();
+
+  await page.evaluate((top) => window.scrollTo({ top, behavior: 'instant' }), start + 64);
+  const scrolled = await sidebar.boundingBox();
+
+  expect(pinned.y).toBeGreaterThan(0);
+  expect(scrolled.y).toBeCloseTo(pinned.y, 0);
+  await expect(sidebar).toBeInViewport({ ratio: 1 });
+});
+
+test('sidebar links remain reachable on short desktop screens', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 360 });
+  await page.goto('works/shared-study/');
+
+  const sidebar = page.locator('.work-margin');
+  const lastLink = sidebar.getByRole('link').last();
+  await lastLink.focus();
+
+  await expect(lastLink).toBeInViewport({ ratio: 0.99 });
+  expect(await sidebar.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+});
+
+test('the mobile sidebar follows the work in the page flow', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('works/anatomy-of-quiet/');
+
+  const sidebar = page.locator('.work-margin');
+  const body = page.locator('.work-body');
+  const sidebarBox = await sidebar.boundingBox();
+  const bodyBox = await body.boundingBox();
+
+  await expect(sidebar).toHaveCSS('position', 'static');
+  expect(sidebarBox.y).toBeGreaterThan(bodyBox.y + bodyBox.height);
+});
+
 test('artwork comes before writing when a work includes both', async ({ page }) => {
   await page.goto('works/the-light-we-leave/');
 

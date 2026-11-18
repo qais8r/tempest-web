@@ -713,6 +713,18 @@ button,
   min-width: 0;
   align-self: start;
 }
+@media screen and (width > 720px) {
+  .work-margin {
+    --work-margin-inset: 2rem;
+    position: sticky;
+    top: var(--work-margin-inset);
+    max-height: calc(100dvh - 2 * var(--work-margin-inset));
+    overflow-y: auto;
+  }
+  .work-margin :focus-visible {
+    outline-offset: -2px;
+  }
+}
 .work-margin .text-link {
   display: inline-flex;
   align-items: center;
