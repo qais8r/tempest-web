@@ -11,7 +11,8 @@ test('the desktop sidebar stays in view while the work scrolls', async ({ page }
   await page.evaluate((top) => window.scrollTo({ top, behavior: 'instant' }), start + 64);
   const scrolled = await sidebar.boundingBox();
 
-  expect(pinned.y).toBeGreaterThan(0);
+  const masthead = await page.getByRole('banner').boundingBox();
+  expect(pinned.y).toBeGreaterThan(masthead.y + masthead.height);
   expect(scrolled.y).toBeCloseTo(pinned.y, 0);
   await expect(sidebar).toBeInViewport({ ratio: 1 });
 });

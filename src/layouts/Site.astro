@@ -6,6 +6,7 @@ import '@fontsource/manrope/latin-400.css';
 import '@fontsource/manrope/latin-500.css';
 import '../styles/global.css';
 import { site, url, preview } from '../lib/content';
+import Masthead from '../components/Masthead.astro';
 import ViewTransitions from '../components/ViewTransitions.astro';
 interface Props {
   title?: string;
@@ -18,7 +19,7 @@ const currentYear = new Date().getFullYear();
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" id={home ? 'top' : undefined}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -31,29 +32,7 @@ const currentYear = new Date().getFullYear();
   </head>
   <body class:list={[reader ? 'reader-body' : 'paper', { 'home-page': home }]}>
     <a class="skip-link" href="#main">Skip to content</a>
-    {
-      !reader && (
-        <header class:list={['masthead', { 'masthead-home': home }]}>
-          <div class="masthead-top">
-            <span>{site.school}</span>
-          </div>
-          <div class="masthead-row">
-            <a class="wordmark" href={url('/')} aria-label="The Tempest home">
-              The Tempest
-            </a>
-            <nav aria-label="Main navigation">
-              <>
-                <a href={url('/issues/')}>Issues</a>
-                <span aria-hidden="true">•</span>
-                <a href={url('/authors/')}>Authors</a>
-                <span aria-hidden="true">•</span>
-                <a href={url('/about/')}>About</a>
-              </>
-            </nav>
-          </div>
-        </header>
-      )
-    }
+    {!reader && <Masthead home={home} />}
     <slot />
     {
       !reader && (

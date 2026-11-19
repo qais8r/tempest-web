@@ -1,0 +1,268 @@
+---
+import { site, url } from '../lib/content';
+
+interface Props {
+  home: boolean;
+}
+
+const { home } = Astro.props;
+---
+
+<div class="masthead-frame">
+  <header class="masthead">
+    <div class="masthead-inner">
+      <div class="masthead-school">{site.school}</div>
+      <a class="wordmark" href={home ? '#top' : url('/')} aria-label="The Tempest home">
+        The Tempest
+      </a>
+      <nav aria-label="Main navigation">
+        <a href={url('/issues/')}>Issues</a>
+        <span aria-hidden="true">•</span>
+        <a href={url('/authors/')}>Authors</a>
+        <span aria-hidden="true">•</span>
+        <a href={url('/about/')}>About</a>
+      </nav>
+    </div>
+  </header>
+</div>
+
+<script>
+  const frame = document.querySelector<HTMLElement>('.masthead-frame');
+
+  if (frame) {
+    const root = document.documentElement;
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    let travel = 0;
+    let lastProgress = '';
+
+    const updateProgress = () => {
+      const progress = reducedMotion.matches
+        ? Number(window.scrollY >= travel - 1)
+        : Math.max(0, Math.min(window.scrollY / travel, 1));
+      const value = progress.toFixed(3);
+      if (value === lastProgress) return;
+
+      frame.style.setProperty('--progress', value);
+      lastProgress = value;
+    };
+
+    const measure = () => {
+      const compactHeight = parseFloat(getComputedStyle(root).scrollPaddingTop);
+      travel = frame.getBoundingClientRect().height - compactHeight;
+      updateProgress();
+    };
+
+    root.dataset.stickyMasthead = '';
+    measure();
+    new ResizeObserver(measure).observe(frame);
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    window.addEventListener('pageshow', measure);
+    reducedMotion.addEventListener('change', updateProgress);
+  }
+</script>
+
+<style>
+  :global(html[data-sticky-masthead]) {
+    --masthead-offset: 4rem;
+    scroll-padding-top: var(--masthead-offset);
+  }
+
+  .masthead-frame {
+    --top-inset: 2rem;
+    --school-height: calc(1px + 0.65rem + 0.57rem * 1.3);
+    --expanded-height: calc(var(--top-inset) + var(--school-height) + 8.5rem);
+    --compact-height: var(--masthead-offset, 4rem);
+    --compact-center: calc(var(--compact-height) / 2);
+    --progress: 0;
+    --remaining: calc(1 - var(--progress));
+    --link-height: calc(2.75rem * var(--progress));
+
+    --wordmark-open-center: calc(var(--top-inset) + var(--school-height) + 4.25rem);
+    --wordmark-open-size: clamp(4.8rem, 9vw, 7.5rem);
+    --wordmark-compact-size: 2.5rem;
+    --wordmark-open-tracking: -0.07em;
+    --wordmark-shrink: var(--progress);
+    --wordmark-remaining: calc(1 - var(--wordmark-shrink));
+
+    --nav-open-center: calc(var(--wordmark-open-center) + 1rem);
+    --nav-center: calc(
+      var(--nav-open-center) * var(--remaining) + var(--compact-center) * var(--progress)
+    );
+    --nav-open-edge: 0.5rem;
+    --nav-open-gap: clamp(0.75rem, 2.2vw, 2.2rem);
+    --nav-compact-gap: clamp(0.65rem, 1.6vw, 1.35rem);
+    --nav-compact-size: 0.7rem;
+    --nav-compact-tracking: 0.18em;
+    --nav-shrink: var(--progress);
+    --nav-remaining: calc(1 - var(--nav-shrink));
+
+    /* Reserve the expanded footprint while the visible header tracks the scroll. */
+    block-size: var(--expanded-height);
+  }
+
+  :global(html[data-sticky-masthead]) .masthead-frame {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  .masthead {
+    block-size: calc(
+      var(--expanded-height) * var(--remaining) + var(--compact-height) * var(--progress)
+    );
+    background-color: var(--paper);
+    background-image: var(--paper-grain);
+    pointer-events: auto;
+  }
+
+  .masthead-inner {
+    position: relative;
+    width: var(--page);
+    block-size: 100%;
+    margin: 0 auto;
+  }
+
+  .masthead-inner::before,
+  .masthead-inner::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    block-size: 1px;
+    pointer-events: none;
+  }
+
+  .masthead-inner::before {
+    inset-block-start: calc(var(--top-inset) * var(--remaining));
+    background: var(--ink);
+    opacity: max(0, calc(1 - var(--progress) * 2.5));
+  }
+
+  .masthead-inner::after {
+    inset-block-end: 0;
+    background: var(--line);
+    opacity: max(0, calc(var(--progress) * 2 - 1.25));
+  }
+
+  .masthead-school {
+    position: absolute;
+    inset-block-start: calc(var(--top-inset) + 1px);
+    padding-block-start: 0.65rem;
+    font: 500 0.57rem/1.3 var(--sans);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    opacity: max(0, calc(1 - var(--progress) * 3));
+    transform: translateY(calc(-1rem * var(--progress)));
+  }
+
+  .wordmark {
+    position: absolute;
+    inset-block-start: calc(
+      var(--wordmark-open-center) * var(--remaining) + var(--compact-center) * var(--progress)
+    );
+    inset-inline-start: 0;
+    display: flex;
+    align-items: center;
+    min-block-size: var(--link-height);
+    transform: translateY(-50%);
+    font: 400 1em / 0.9 var(--serif);
+    font-size: calc(
+      var(--wordmark-open-size) * var(--wordmark-remaining) + var(--wordmark-compact-size) *
+        var(--wordmark-shrink)
+    );
+    letter-spacing: calc(
+      var(--wordmark-open-tracking) * var(--wordmark-remaining) - 0.065em * var(--wordmark-shrink)
+    );
+    white-space: nowrap;
+    text-decoration: none;
+  }
+
+  nav {
+    position: absolute;
+    inset-block-start: var(--nav-center);
+    inset-inline-end: calc(var(--nav-open-edge) * var(--remaining));
+    display: flex;
+    align-items: center;
+    gap: calc(var(--nav-open-gap) * var(--remaining) + var(--nav-compact-gap) * var(--progress));
+    transform: translateY(-50%);
+    font: 500 1em / 1 var(--sans);
+    font-size: calc(0.74rem * var(--nav-remaining) + var(--nav-compact-size) * var(--nav-shrink));
+    letter-spacing: calc(
+      0.26em * var(--nav-remaining) + var(--nav-compact-tracking) * var(--nav-shrink)
+    );
+    white-space: nowrap;
+    text-transform: uppercase;
+  }
+
+  nav span {
+    color: var(--red);
+    margin-inline: 0.5em;
+  }
+
+  nav a {
+    display: grid;
+    align-items: center;
+    min-block-size: var(--link-height);
+    padding: 0.4rem 0;
+    border-bottom: 1px solid transparent;
+    text-decoration: none;
+  }
+
+  nav a:is(:hover, :focus-visible) {
+    border-color: var(--red);
+  }
+
+  :is(.wordmark, nav a):focus-visible {
+    outline: 2px solid var(--red);
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 720px) {
+    :global(html[data-sticky-masthead]) {
+      --masthead-offset: 3.5rem;
+    }
+
+    .masthead-frame {
+      --top-inset: 1rem;
+      --expanded-height: calc(10.23rem + var(--page) * 0.1075);
+      --wordmark-open-center: calc(4.16rem + var(--page) * 0.05);
+      --wordmark-open-size: calc(var(--page) / 5.6);
+      --wordmark-compact-size: clamp(1.55rem, 7.4vw, 2.1rem);
+      --wordmark-open-tracking: -0.075em;
+      --nav-open-center: calc(var(--expanded-height) - 1.85rem);
+      --nav-open-edge: 0px;
+      --nav-open-gap: 0px;
+      --nav-compact-gap: 0px;
+      --nav-compact-size: 0.625rem;
+      --nav-compact-tracking: 0.12em;
+      --separator-space: clamp(0.78rem, calc((100vw - 17rem) * 0.3), 1.3rem);
+
+      /* Narrow both groups before they meet in the compact row. */
+      --wordmark-shrink: min(1, calc(var(--progress) * 1.26));
+      --nav-shrink: min(1, calc(var(--progress) * 1.55));
+    }
+
+    nav::before {
+      content: '';
+      position: absolute;
+      inset-block-start: calc(50% - 1.9rem);
+      inset-inline-end: 0;
+      inline-size: var(--page);
+      block-size: 1px;
+      background: var(--line);
+      opacity: max(0, calc(1 - var(--progress) * 3));
+      pointer-events: none;
+    }
+
+    nav span {
+      overflow: hidden;
+      max-inline-size: calc(1em * var(--nav-remaining));
+      margin-inline: calc((var(--separator-space) + 0.5em) * var(--nav-remaining));
+      opacity: max(0, calc(1 - var(--nav-shrink) * 2));
+    }
+
+    nav a:not(:first-child) {
+      margin-inline-start: calc(clamp(0.65rem, 3vw, 1.15rem) * var(--nav-shrink));
+    }
+  }
+</style>
