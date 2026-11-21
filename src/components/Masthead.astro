@@ -13,14 +13,14 @@ const { home } = Astro.props;
     <div class="masthead-inner">
       <div class="masthead-school">{site.school}</div>
       <a class="wordmark" href={home ? '#top' : url('/')} aria-label="The Tempest home">
-        The Tempest
+        <span>The Tempest</span>
       </a>
       <nav aria-label="Main navigation">
-        <a href={url('/issues/')}>Issues</a>
+        <a href={url('/issues/')}><span>Issues</span></a>
         <span aria-hidden="true">•</span>
-        <a href={url('/authors/')}>Authors</a>
+        <a href={url('/authors/')}><span>Authors</span></a>
         <span aria-hidden="true">•</span>
-        <a href={url('/about/')}>About</a>
+        <a href={url('/about/')}><span>About</span></a>
       </nav>
     </div>
   </header>
@@ -32,23 +32,133 @@ const { home } = Astro.props;
   if (frame) {
     const root = document.documentElement;
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    const mobile = matchMedia('(max-width: 720px)');
+    const Timeline = (window as Window & { ScrollTimeline?: new () => AnimationTimeline })
+      .ScrollTimeline;
+    const timeline = Timeline && 'rangeEnd' in Animation.prototype ? new Timeline() : null;
+    const items = [...frame.querySelectorAll<HTMLElement>('.wordmark, nav > *')];
+    const labels = items.map((item) => item.querySelector('span'));
+    let animations: Animation[] = [];
     let travel = 0;
     let lastProgress = '';
 
     const updateProgress = () => {
+      if (!travel || (timeline && animations.length)) return;
+
       const progress = reducedMotion.matches
         ? Number(window.scrollY >= travel - 1)
         : Math.max(0, Math.min(window.scrollY / travel, 1));
       const value = progress.toFixed(3);
       if (value === lastProgress) return;
 
-      frame.style.setProperty('--progress', value);
+      if (animations.length) {
+        for (const animation of animations) animation.currentTime = progress;
+      } else {
+        frame.style.setProperty('--progress', value);
+      }
       lastProgress = value;
     };
 
     const measure = () => {
       const compactHeight = parseFloat(getComputedStyle(root).scrollPaddingTop);
-      travel = frame.getBoundingClientRect().height - compactHeight;
+      const distance = frame.getBoundingClientRect().height - compactHeight;
+      if (!(distance > 0)) return;
+
+      travel = distance;
+      animations.forEach((animation) => animation.cancel());
+      animations = [];
+      delete frame.dataset.mobileMotion;
+
+      if (mobile.matches && !reducedMotion.matches) {
+        const style = getComputedStyle(frame);
+        const navRate = parseFloat(style.getPropertyValue('--nav-shrink-rate'));
+        const wordmarkRate = parseFloat(style.getPropertyValue('--wordmark-shrink-rate'));
+        // Take layout measurements only when geometry changes. The intermediate
+        // stops are where the nav and wordmark finish narrowing into one row.
+        const stops = [0, 1 / navRate, 1 / wordmarkRate, 1];
+        const layouts = stops.map((stop) => {
+          frame.style.setProperty('--progress', String(stop));
+          return items.map((item, index) => ({
+            box: item.getBoundingClientRect(),
+            labelHeight: labels[index]?.getBoundingClientRect().height ?? 0,
+          }));
+        });
+        frame.style.removeProperty('--progress');
+        frame.dataset.mobileMotion = '';
+
+        const animate = (element: Element, keyframes: Keyframe[], pseudoElement?: string) => {
+          const animation = element.animate(keyframes, {
+            fill: 'both',
+            pseudoElement,
+            ...(timeline ? { timeline, rangeEnd: `${travel}px` } : { duration: 1 }),
+          });
+          if (!timeline) animation.pause();
+          animations.push(animation);
+        };
+
+        items.forEach((item, index) => {
+          const start = layouts[0][index];
+          const transforms = layouts.map((layout, step) => {
+            const { box, labelHeight } = layout[index];
+            const offset = stops[step];
+            const x = box.left - start.box.left;
+            const y = box.top - start.box.top + travel * offset;
+            const scaleX = box.width / start.box.width;
+            const scaleY = box.height / start.box.height;
+            return { offset, x, y, scaleX, scaleY, labelHeight };
+          });
+
+          animate(
+            item,
+            transforms.map(({ offset, x, y, scaleX, scaleY }) => ({
+              offset,
+              transform: `translate(${x}px, ${y}px) scale(${scaleX}, ${scaleY})`,
+            })),
+          );
+
+          const label = labels[index];
+          if (label && start.labelHeight) {
+            animate(
+              label,
+              transforms.map(({ offset, scaleY, labelHeight }) => ({
+                offset,
+                // Scale the text independently of the link's touch-target height.
+                transform: `scaleY(${labelHeight / start.labelHeight / scaleY})`,
+              })),
+            );
+          } else {
+            animate(item, [
+              { opacity: 1 },
+              { offset: 1 / (navRate * 2), opacity: 0 },
+              { opacity: 0 },
+            ]);
+          }
+        });
+
+        const fadeOut = (end: number, distance: string): Keyframe[] => [
+          { transform: 'translateY(0)', opacity: 1 },
+          { offset: end, opacity: 0 },
+          { transform: `translateY(${distance})`, opacity: 0 },
+        ];
+        const inner = frame.querySelector('.masthead-inner')!;
+        animate(inner, fadeOut(0.4, 'calc(var(--travel) - var(--top-inset))'), '::before');
+        animate(
+          inner,
+          [{ opacity: 0 }, { offset: 0.625, opacity: 0 }, { opacity: 0.75 }],
+          '::after',
+        );
+        animate(
+          frame.querySelector('.masthead-school')!,
+          fadeOut(1 / 3, 'calc(var(--travel) - 1rem)'),
+        );
+        animate(
+          frame.querySelector('nav')!,
+          fadeOut(1 / 3, 'calc(var(--travel) + var(--compact-center) - var(--nav-open-center))'),
+          '::before',
+        );
+      }
+
+      lastProgress = '';
       updateProgress();
     };
 
@@ -56,8 +166,14 @@ const { home } = Astro.props;
     measure();
     new ResizeObserver(measure).observe(frame);
     window.addEventListener('scroll', updateProgress, { passive: true });
-    window.addEventListener('pageshow', measure);
-    reducedMotion.addEventListener('change', updateProgress);
+    window.addEventListener('pageshow', (event) => {
+      if (event.persisted) measure();
+      else updateProgress();
+    });
+    reducedMotion.addEventListener('change', measure);
+    document.fonts.ready.then(() => {
+      if (mobile.matches && !reducedMotion.matches) measure();
+    });
   }
 </script>
 
@@ -194,7 +310,7 @@ const { home } = Astro.props;
     text-transform: uppercase;
   }
 
-  nav span {
+  nav > span {
     color: var(--red);
     margin-inline: 0.5em;
   }
@@ -238,8 +354,10 @@ const { home } = Astro.props;
       --separator-space: clamp(0.78rem, calc((100vw - 17rem) * 0.3), 1.3rem);
 
       /* Narrow both groups before they meet in the compact row. */
-      --wordmark-shrink: min(1, calc(var(--progress) * 1.26));
-      --nav-shrink: min(1, calc(var(--progress) * 1.55));
+      --wordmark-shrink-rate: 1.26;
+      --nav-shrink-rate: 1.55;
+      --wordmark-shrink: min(1, calc(var(--progress) * var(--wordmark-shrink-rate)));
+      --nav-shrink: min(1, calc(var(--progress) * var(--nav-shrink-rate)));
     }
 
     nav::before {
@@ -254,7 +372,7 @@ const { home } = Astro.props;
       pointer-events: none;
     }
 
-    nav span {
+    nav > span {
       overflow: hidden;
       max-inline-size: calc(1em * var(--nav-remaining));
       margin-inline: calc((var(--separator-space) + 0.5em) * var(--nav-remaining));
@@ -263,6 +381,36 @@ const { home } = Astro.props;
 
     nav a:not(:first-child) {
       margin-inline-start: calc(clamp(0.65rem, 3vw, 1.15rem) * var(--nav-shrink));
+    }
+
+    .masthead-frame[data-mobile-motion] {
+      --travel: calc(var(--expanded-height) - var(--compact-height));
+    }
+
+    :global(html[data-sticky-masthead]) .masthead-frame[data-mobile-motion] {
+      inset-block-start: calc(-1 * var(--travel));
+    }
+
+    /* The paper slides with the page until the compact strip reaches the top. */
+    [data-mobile-motion] .masthead {
+      block-size: var(--expanded-height);
+    }
+
+    [data-mobile-motion] .wordmark {
+      translate: 0 -50%;
+    }
+
+    /* The links move out of the nav's starting box as the wordmark enters it. */
+    [data-mobile-motion] nav {
+      pointer-events: none;
+    }
+
+    [data-mobile-motion] nav a {
+      pointer-events: auto;
+    }
+
+    [data-mobile-motion] :is(.wordmark, nav > *) {
+      transform-origin: top left;
     }
   }
 </style>
